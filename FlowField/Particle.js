@@ -27,10 +27,10 @@ class Particle {
       ) *
       TWO_PI *
       controls.noiseStrength;
-    this.dir.x = cos(angle);
-    this.dir.y = sin(angle);
-    //this.dir.x = cos(angle) * tan(angle) * 0.1; // For melting effect 600 scale 3 strength
-    //this.dir.y = this.dir.x * angle * this.vel.x;
+    // this.dir.x = cos(angle); // Normal Perlin Noise flow field
+    // this.dir.y = sin(angle);
+    this.dir.x = cos(angle) * tan(angle) * 0.1; // For melting effect
+    this.dir.y = this.dir.x * angle * this.vel.x;
     this.vel = this.dir.copy();
     this.vel.mult(controls.speed);
     this.loc.add(this.vel);
