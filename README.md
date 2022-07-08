@@ -1,5 +1,5 @@
 # Generative Art
- A collection of my art. Mostly produced with [p5js](https://p5js.org/).
+ A collection of my art. Mostly produced with [p5js](https://p5js.org/) and [nannou](https://nannou.cc/).
 
 ## [Melting Flow Field](/FlowField/)
 - [Demo](https://editor.p5js.org/sprung/full/mQG7gwN1Y)
@@ -11,16 +11,17 @@
 
 <img src="/QuadTreeFlowField/Results/QuadTreeFlowField.png" width="800px"/>
 
+## [Attractors](/Attractors/)
+<p float="left">
+  <img src="/Attractors/pictures/Clifford/033.png" width="400px"/>
+  <img src="/Attractors/pictures/PeterDeJong/588148.png" width="400px"/>
+</p>
+
 ## [Domain Warping](/DomainWarping/)
 
 <img src="/DomainWarping/Pictures/Desesrt/Desert_Ocean_Clouds_2.png" width="800px"/>
 
 
-## [Attractors](/Attractors/)
 
-<p float="left">
-  <img src="/Attractors/pictures/Clifford/033.png" width="400px"/>
-  <img src="/Attractors/pictures/PeterDeJong/588148.png" width="400px"/>
-</p>
 
 
