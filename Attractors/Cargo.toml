@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 nannou = "0.18.1"
+nannou_conrod = "0.18.0"
