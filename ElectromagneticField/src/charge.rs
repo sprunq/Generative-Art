@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul, Sub};
 
-use nannou::prelude::*;
+use nannou::{draw::mesh::vertex::Color, prelude::*};
 
 #[derive(Copy, Clone)]
 pub struct Charge {
@@ -40,10 +40,18 @@ impl Charge {
     }
 
     pub fn render(&self, draw: &Draw) {
-        draw.ellipse()
-            .xy(self.pos)
-            .width(self.charge / 35.0)
-            .height(self.charge / 35.0)
-            .rgba(0.0, 0.0, 0.0, 1.0);
+        let scl = self.charge.abs() / 2000.0;
+        for s in 0..scl as i32 {
+            let col = if self.charge > 0.0 {
+                Color::new(1.0, 1.0, 1.0, 0.01)
+            } else {
+                Color::new(0.0, 0.0, 0.0, 0.01)
+            };
+            draw.ellipse()
+                .xy(self.pos)
+                .width(s as f32)
+                .height(s as f32)
+                .color(col);
+        }
     }
 }

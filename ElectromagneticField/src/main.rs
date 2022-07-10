@@ -1,17 +1,14 @@
-use std::{
-    ops::{Add, Mul},
-    thread,
-    time::Duration,
-};
-
 use charge::Charge;
 use nannou::{draw::mesh::vertex::Color, prelude::*};
 use particle::Particle;
 use rayon::{
-    iter::{
-        IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator,
-    },
+    iter::{IntoParallelRefMutIterator, ParallelIterator},
     slice::ParallelSlice,
+};
+use std::{
+    ops::{Add, Mul},
+    thread,
+    time::Duration,
 };
 
 pub mod charge;
@@ -31,10 +28,18 @@ struct Model {
     render_vectors: bool,
 }
 
+pub fn random_point_in_circle(max_r: f32, w: f32, h: f32) -> Vec2 {
+    let a = random_f32() * 2.0 * PI;
+    let r = 20.0 * (random_f32() * max_r).sqrt();
+    let x = w / 2.0 + r * a.cos();
+    let y = h / 2.0 + r * a.sin();
+    Vec2::new(x - w / 2.0, y - h / 2.0)
+}
+
 fn model(app: &App) -> Model {
     let _window = app
         .new_window()
-        .size(1000, 1000)
+        .size(20000, 20000)
         .view(view)
         .build()
         .unwrap();
@@ -47,24 +52,18 @@ fn model(app: &App) -> Model {
     let row = (screen_h / sz as f32) as usize;
 
     let mut charges = vec![];
-    for _ in 0..1000 {
+    for _ in 0..200 {
         let charge = Charge::new(
-            Vec2::new(
-                random_f32() * screen_w - screen_w / 2.0,
-                random_f32() * screen_h - screen_h / 2.0,
-            ),
-            random_range(-100_000.0, 100_000.0),
+            random_point_in_circle(8000.0, screen_w, screen_h),
+            random_range(-000_000.0, 100_000.0),
         );
         charges.push(charge);
     }
 
     let mut points = Vec::<Particle>::new();
-    for _ in 0..300_000 {
+    for _ in 0..200_000 {
         let p = Particle::new(
-            Vec2::new(
-                random_f32() * screen_w - screen_w / 2.0,
-                random_f32() * screen_h - screen_h / 2.0,
-            ),
+            random_point_in_circle(10000.0, screen_w, screen_h),
             Vec2::new(0.0, 0.0),
             Vec2::new(10.0, 10.0),
         );
@@ -82,11 +81,13 @@ fn model(app: &App) -> Model {
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {
+    // Parallelized Particle Charge computation
+    // Charge check only gives an performance increase for big numbers.
     _model.points.par_iter_mut().for_each(|particle| {
         if particle.trail_list.len() < 100 {
-            let mut force_sum = _model
+            let force_sum = _model
                 .charges
-                .par_chunks(100)
+                .par_chunks(200)
                 .map(|chunk| {
                     let mut force_sum = Vec2::new(0.0, 0.0);
                     chunk.iter().for_each(|charge| {
@@ -97,12 +98,15 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
                 })
                 .collect::<Vec<_>>()
                 .into_iter()
-                .reduce(|a, b| a.add(b))
-                .unwrap();
+                .reduce(|a, b| a.add(b));
 
-            force_sum = force_sum.clamp_length(-10.0, 10.0);
-
-            particle.move_particle(force_sum.angle());
+            match force_sum {
+                Some(mut force) => {
+                    force = force.clamp_length(-10.0, 10.0);
+                    particle.move_particle(force.angle());
+                }
+                None => {}
+            }
         }
     });
 }
@@ -127,6 +131,11 @@ fn view(app: &App, _model: &Model, frame: Frame) {
 
     if app.elapsed_frames() != 200 {
         return;
+    } else {
+        print!("Printing");
+        let file_path = captured_frame_path(app);
+        app.main_window().capture_frame(file_path);
+        print!("Print done");
     }
     let draw = app.draw();
     draw.background().color(WHITE);
@@ -140,10 +149,14 @@ fn view(app: &App, _model: &Model, frame: Frame) {
     for particle in _model.points.clone() {
         let mut colored_points = Vec::new();
         for p in particle.trail_list.clone() {
-            let color = Color::new(0.0, 0.0, 0.0, 0.03);
+            let color = Color::new(0.0, 0.0, 0.0, 0.2);
             colored_points.push((p, color));
         }
         draw.polyline().points_colored(colored_points);
+    }
+
+    for c in &_model.charges {
+        //c.render(&draw);
     }
 
     draw.to_frame(app, &frame).unwrap();
