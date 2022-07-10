@@ -1,8 +1,18 @@
-use std::ops::{Add, Mul};
+use std::{
+    ops::{Add, Mul},
+    thread,
+    time::Duration,
+};
 
 use charge::Charge;
-use nannou::{draw::mesh::vertex::Color, lyon::lyon_tessellation::StrokeOptions, prelude::*};
+use nannou::{draw::mesh::vertex::Color, prelude::*};
 use particle::Particle;
+use rayon::{
+    iter::{
+        IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator,
+    },
+    slice::ParallelSlice,
+};
 
 pub mod charge;
 pub mod particle;
@@ -29,15 +39,15 @@ fn model(app: &App) -> Model {
         .build()
         .unwrap();
 
-    let screen_w = app.main_window().rect().w() as f32 * 0.7;
-    let screen_h = app.main_window().rect().h() as f32 * 0.7;
+    let screen_w = app.main_window().rect().w() as f32 * 1.0;
+    let screen_h = app.main_window().rect().h() as f32 * 1.0;
 
     let sz = 20;
     let col = (screen_w / sz as f32) as usize;
     let row = (screen_h / sz as f32) as usize;
 
     let mut charges = vec![];
-    for _ in 0..200 {
+    for _ in 0..1000 {
         let charge = Charge::new(
             Vec2::new(
                 random_f32() * screen_w - screen_w / 2.0,
@@ -49,7 +59,7 @@ fn model(app: &App) -> Model {
     }
 
     let mut points = Vec::<Particle>::new();
-    for _ in 0..20000 {
+    for _ in 0..300_000 {
         let p = Particle::new(
             Vec2::new(
                 random_f32() * screen_w - screen_w / 2.0,
@@ -72,31 +82,50 @@ fn model(app: &App) -> Model {
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {
-    if _app.elapsed_frames() % 10 == 0 {
-        let fps = _app.fps().round();
-        if fps < 10_000_000.0 {
-            _app.main_window().set_title(&fps.to_string());
-        }
-    }
+    _model.points.par_iter_mut().for_each(|particle| {
+        if particle.trail_list.len() < 100 {
+            let mut force_sum = _model
+                .charges
+                .par_chunks(100)
+                .map(|chunk| {
+                    let mut force_sum = Vec2::new(0.0, 0.0);
+                    chunk.iter().for_each(|charge| {
+                        let force = charge.field_force(particle.pos);
+                        force_sum = force_sum.add(force);
+                    });
+                    force_sum
+                })
+                .collect::<Vec<_>>()
+                .into_iter()
+                .reduce(|a, b| a.add(b))
+                .unwrap();
 
-    for particle in &mut _model.points {
-        if particle.trail_list.len() > 100 {
-            continue;
-        }
-        let mut force_sum = Vec2::new(0.0, 0.0);
-        for charge in _model.charges.clone() {
-            let force = charge.field_force(particle.pos);
-            force_sum = force_sum.add(force);
-        }
+            force_sum = force_sum.clamp_length(-10.0, 10.0);
 
-        force_sum = force_sum.clamp_length(-10.0, 10.0);
-
-        particle.move_particle(force_sum.angle());
-    }
+            particle.move_particle(force_sum.angle());
+        }
+    });
 }
 
 fn view(app: &App, _model: &Model, frame: Frame) {
-    if app.elapsed_frames() != 100 {
+    if app.elapsed_frames() % 10 == 0 {
+        let fps = app.fps().round();
+        let s_fps = format!("{} fps \t{}", fps, app.elapsed_frames());
+        if fps < 10_000_000.0 {
+            app.main_window().set_title(&s_fps);
+        }
+    }
+
+    if app.keys.down.contains(&Key::S) {
+        print!("Printing");
+        let file_path = captured_frame_path(app);
+        app.main_window().capture_frame(file_path);
+        print!("Print done");
+
+        thread::sleep(Duration::from_millis(500));
+    }
+
+    if app.elapsed_frames() != 200 {
         return;
     }
     let draw = app.draw();
@@ -111,24 +140,13 @@ fn view(app: &App, _model: &Model, frame: Frame) {
     for particle in _model.points.clone() {
         let mut colored_points = Vec::new();
         for p in particle.trail_list.clone() {
-            let color = Color::new(0.0, 0.0, 0.0, 0.1);
+            let color = Color::new(0.0, 0.0, 0.0, 0.03);
             colored_points.push((p, color));
         }
         draw.polyline().points_colored(colored_points);
     }
 
-    for c in &_model.charges {
-        //c.render(&draw);
-    }
-
     draw.to_frame(app, &frame).unwrap();
-
-    if app.keys.down.contains(&Key::S) {
-        print!("Printing");
-        let file_path = captured_frame_path(app);
-        app.main_window().capture_frame(file_path);
-        print!("Print done");
-    }
 }
 
 fn render_vectors(draw: &Draw, app: &App, _model: &Model) {
@@ -159,5 +177,5 @@ fn captured_frame_path(app: &App) -> std::path::PathBuf {
         .expect("failed to locate `project_path`")
         .join(app.exe_name().unwrap())
         .join(format!("{}", (random_f32() * 1000000.0).to_string()))
-        .with_extension("tiff")
+        .with_extension("png")
 }
