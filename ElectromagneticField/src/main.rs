@@ -39,7 +39,7 @@ pub fn random_point_in_circle(max_r: f32, w: f32, h: f32) -> Vec2 {
 fn model(app: &App) -> Model {
     let _window = app
         .new_window()
-        .size(20000, 20000)
+        .size(1000, 1000)
         .view(view)
         .build()
         .unwrap();
@@ -47,23 +47,23 @@ fn model(app: &App) -> Model {
     let screen_w = app.main_window().rect().w() as f32 * 1.0;
     let screen_h = app.main_window().rect().h() as f32 * 1.0;
 
-    let sz = 20;
+    let sz = 30;
     let col = (screen_w / sz as f32) as usize;
     let row = (screen_h / sz as f32) as usize;
 
     let mut charges = vec![];
-    for _ in 0..200 {
+    for _ in 0..10 {
         let charge = Charge::new(
-            random_point_in_circle(8000.0, screen_w, screen_h),
-            random_range(-000_000.0, 100_000.0),
+            random_point_in_circle(800.0, screen_w, screen_h),
+            random_range(-100_000.0, 100_000.0),
         );
         charges.push(charge);
     }
 
     let mut points = Vec::<Particle>::new();
-    for _ in 0..200_000 {
+    for _ in 0..50_000 {
         let p = Particle::new(
-            random_point_in_circle(10000.0, screen_w, screen_h),
+            random_point_in_circle(1000.0, screen_w, screen_h),
             Vec2::new(0.0, 0.0),
             Vec2::new(10.0, 10.0),
         );
@@ -140,23 +140,22 @@ fn view(app: &App, _model: &Model, frame: Frame) {
     let draw = app.draw();
     draw.background().color(WHITE);
 
-    // Vector field
-    if _model.render_vectors {
-        render_vectors(&draw, app, _model);
-    }
-
     // Particles
     for particle in _model.points.clone() {
         let mut colored_points = Vec::new();
         for p in particle.trail_list.clone() {
-            let color = Color::new(0.0, 0.0, 0.0, 0.2);
+            let color = Color::new(0.0, 0.0, 0.0, 0.17);
             colored_points.push((p, color));
         }
         draw.polyline().points_colored(colored_points);
     }
 
-    for c in &_model.charges {
-        //c.render(&draw);
+    // Vector field
+    if _model.render_vectors {
+        render_vectors(&draw, app, _model);
+        for c in &_model.charges {
+            c.render(&draw);
+        }
     }
 
     draw.to_frame(app, &frame).unwrap();
@@ -180,7 +179,7 @@ fn render_vectors(draw: &Draw, app: &App, _model: &Model) {
                 .start(Vec2::new(offset_x, offset_y))
                 .weight(1.0)
                 .end(Vec2::new(offset_x + sum.x, offset_y + sum.y))
-                .rgba(0.0, 0.0, 0.0, 1.0);
+                .rgba(0.0, 1.0, 0.0, 1.0);
         }
     }
 }

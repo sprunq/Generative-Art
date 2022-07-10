@@ -40,12 +40,12 @@ impl Charge {
     }
 
     pub fn render(&self, draw: &Draw) {
-        let scl = self.charge.abs() / 2000.0;
+        let scl = self.charge.abs() / 3000.0;
         for s in 0..scl as i32 {
             let col = if self.charge > 0.0 {
-                Color::new(1.0, 1.0, 1.0, 0.01)
+                Color::new(1.0, 0.0, 0.0, 1.0)
             } else {
-                Color::new(0.0, 0.0, 0.0, 0.01)
+                Color::new(0.0, 0.0, 1.0, 1.0)
             };
             draw.ellipse()
                 .xy(self.pos)
