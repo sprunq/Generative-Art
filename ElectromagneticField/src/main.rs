@@ -1,8 +1,11 @@
 use std::ops::{Add, Mul};
 
-use nannou::prelude::*;
+use charge::Charge;
+use nannou::{draw::mesh::vertex::Color, lyon::lyon_tessellation::StrokeOptions, prelude::*};
+use particle::Particle;
 
 pub mod charge;
+pub mod particle;
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -10,36 +13,125 @@ fn main() {
 
 struct Model {
     _window: window::Id,
-    charges: Vec<charge::Charge>,
+    charges: Vec<Charge>,
     col: usize,
     row: usize,
     sz: usize,
+    points: Vec<Particle>,
+    render_vectors: bool,
 }
 
 fn model(app: &App) -> Model {
-    let _window = app.new_window().size(800, 800).view(view).build().unwrap();
-    let sz = 10;
-    let col = (app.main_window().rect().w() as f32 / sz as f32) as usize;
-    let row = (app.main_window().rect().h() as f32 / sz as f32) as usize;
+    let _window = app
+        .new_window()
+        .size(1000, 1000)
+        .view(view)
+        .build()
+        .unwrap();
+
+    let screen_w = app.main_window().rect().w() as f32 * 0.7;
+    let screen_h = app.main_window().rect().h() as f32 * 0.7;
+
+    let sz = 20;
+    let col = (screen_w / sz as f32) as usize;
+    let row = (screen_h / sz as f32) as usize;
+
     let mut charges = vec![];
-    charges.push(charge::Charge::new(Vec2::new(0.0, 0.0), 1.0));
-    charges.push(charge::Charge::new(Vec2::new(-400.0, 30.0), 1.0));
-    charges.push(charge::Charge::new(Vec2::new(-200.0, 200.0), 4.0));
+    for _ in 0..200 {
+        let charge = Charge::new(
+            Vec2::new(
+                random_f32() * screen_w - screen_w / 2.0,
+                random_f32() * screen_h - screen_h / 2.0,
+            ),
+            random_range(-100_000.0, 100_000.0),
+        );
+        charges.push(charge);
+    }
+
+    let mut points = Vec::<Particle>::new();
+    for _ in 0..20000 {
+        let p = Particle::new(
+            Vec2::new(
+                random_f32() * screen_w - screen_w / 2.0,
+                random_f32() * screen_h - screen_h / 2.0,
+            ),
+            Vec2::new(0.0, 0.0),
+            Vec2::new(10.0, 10.0),
+        );
+        points.push(p);
+    }
     Model {
         _window,
-        charges: charges,
+        charges,
         col,
         row,
-        sz: sz,
+        sz,
+        points,
+        render_vectors: false,
     }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn update(_app: &App, _model: &mut Model, _update: Update) {
+    if _app.elapsed_frames() % 10 == 0 {
+        let fps = _app.fps().round();
+        if fps < 10_000_000.0 {
+            _app.main_window().set_title(&fps.to_string());
+        }
+    }
+
+    for particle in &mut _model.points {
+        if particle.trail_list.len() > 100 {
+            continue;
+        }
+        let mut force_sum = Vec2::new(0.0, 0.0);
+        for charge in _model.charges.clone() {
+            let force = charge.field_force(particle.pos);
+            force_sum = force_sum.add(force);
+        }
+
+        force_sum = force_sum.clamp_length(-10.0, 10.0);
+
+        particle.move_particle(force_sum.angle());
+    }
+}
 
 fn view(app: &App, _model: &Model, frame: Frame) {
-    let mut draw = app.draw();
+    if app.elapsed_frames() != 100 {
+        return;
+    }
+    let draw = app.draw();
     draw.background().color(WHITE);
 
+    // Vector field
+    if _model.render_vectors {
+        render_vectors(&draw, app, _model);
+    }
+
+    // Particles
+    for particle in _model.points.clone() {
+        let mut colored_points = Vec::new();
+        for p in particle.trail_list.clone() {
+            let color = Color::new(0.0, 0.0, 0.0, 0.1);
+            colored_points.push((p, color));
+        }
+        draw.polyline().points_colored(colored_points);
+    }
+
+    for c in &_model.charges {
+        //c.render(&draw);
+    }
+
+    draw.to_frame(app, &frame).unwrap();
+
+    if app.keys.down.contains(&Key::S) {
+        print!("Printing");
+        let file_path = captured_frame_path(app);
+        app.main_window().capture_frame(file_path);
+        print!("Print done");
+    }
+}
+
+fn render_vectors(draw: &Draw, app: &App, _model: &Model) {
     for j in 0.._model.row {
         for i in 0.._model.col {
             let x = i * _model.sz + _model.sz / 2;
@@ -48,29 +140,24 @@ fn view(app: &App, _model: &Model, frame: Frame) {
             let offset_y = y as f32 - app.main_window().rect().h() / 2.0;
             let mut sum = Vec2::new(0.0, 0.0);
             for charge in _model.charges.clone() {
-                let line = charge.field_line(Vec2::new(offset_x, offset_y));
+                let line = charge.field_force(Vec2::new(offset_x, offset_y));
                 sum = sum.add(line);
             }
             sum = sum.mul(100.0);
             sum = sum.clamp_length(-1.0 * _model.sz as f32, _model.sz as f32);
             draw.line()
                 .start(Vec2::new(offset_x, offset_y))
-                .weight(2.0)
+                .weight(1.0)
                 .end(Vec2::new(offset_x + sum.x, offset_y + sum.y))
-                .color(BLACK);
+                .rgba(0.0, 0.0, 0.0, 1.0);
         }
     }
+}
 
-    for charge in _model.charges.clone() {
-        charge.render(&mut draw);
-    }
-
-    draw.to_frame(app, &frame).unwrap();
-
-    if app.elapsed_frames() % 10 == 0 {
-        let fps = app.fps().round();
-        if fps < 10_000_000.0 {
-            app.main_window().set_title(&fps.to_string());
-        }
-    }
+fn captured_frame_path(app: &App) -> std::path::PathBuf {
+    app.project_path()
+        .expect("failed to locate `project_path`")
+        .join(app.exe_name().unwrap())
+        .join(format!("{}", (random_f32() * 1000000.0).to_string()))
+        .with_extension("tiff")
 }

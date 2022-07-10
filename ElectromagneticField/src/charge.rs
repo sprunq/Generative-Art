@@ -4,7 +4,7 @@ use nannou::prelude::*;
 
 #[derive(Copy, Clone)]
 pub struct Charge {
-    pos: Vec2,
+    pub pos: Vec2,
     vel: Vec2,
     acc: Vec2,
     charge: f32,
@@ -24,10 +24,10 @@ impl Charge {
         self.acc = self.acc.add(force);
     }
 
-    pub fn field_line(&self, pos: Vec2) -> Vec2 {
+    pub fn field_force(&self, pos: Vec2) -> Vec2 {
         let mut disp = pos.sub(self.pos);
         let dist_sq = (pow(disp.x, 2) + pow(disp.y, 2)).sqrt();
-        let new_mag = 1000.0 * self.charge / dist_sq;
+        let new_mag = self.charge / dist_sq;
         disp.x = disp.x * new_mag / dist_sq;
         disp.y = disp.y * new_mag / dist_sq;
         return disp;
@@ -39,11 +39,11 @@ impl Charge {
         self.acc = self.acc.mul(0.0);
     }
 
-    pub fn render(&self, draw: &mut Draw) {
+    pub fn render(&self, draw: &Draw) {
         draw.ellipse()
             .xy(self.pos)
-            .width(10.0)
-            .height(10.0)
-            .rgba(0.4, 0.7, 0.7, 0.8);
+            .width(self.charge / 35.0)
+            .height(self.charge / 35.0)
+            .rgba(0.0, 0.0, 0.0, 1.0);
     }
 }
