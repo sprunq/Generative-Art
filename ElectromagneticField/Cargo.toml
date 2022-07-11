@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 nannou = "0.18.1"
+rand_core = "0.6.3"
 rayon = "1.5.3"
