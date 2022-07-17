@@ -6,8 +6,8 @@
 
 <img src="/FlowField/Results/AcidRainBQ.webp" width="800px"/>
 
-## [Electromagnetic Field](/ElectromagneticField/)
-<img src="/ElectromagneticField/pictures/307749.png" width="800px"/>
+## [Electric Field](/ElectromagneticField/)
+<img src="/ElectromagneticField/pictures/509066.png" width="800px"/>
 
 ## [Attractors](/Attractors/)
 <p float="left">
