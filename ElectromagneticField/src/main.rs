@@ -40,7 +40,7 @@ struct Model {
 fn model(app: &App) -> Model {
     let _window = app
         .new_window()
-        .size(1900, 1900)
+        .size(1000, 1000)
         .view(view)
         .build()
         .unwrap();
@@ -49,7 +49,7 @@ fn model(app: &App) -> Model {
     let charge_spawn_diameter = 1500.0;
     let charge_range = -0500000000.0..10000000000.0;
 
-    let particle_count = 70_000;
+    let particle_count = 50_000;
     let particle_spawn_diameter = 3000.0;
     let particle_speed = Vec2::new(5.0, 5.0);
 
@@ -104,7 +104,38 @@ fn model(app: &App) -> Model {
     }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {
+fn update(_app: &App, _model: &mut Model, _update: Update) {}
+
+fn view(app: &App, _model: &Model, frame: Frame) {
+    if app.elapsed_frames() % 2 == 0 {
+        let fps = app.fps().round();
+        let s_fps = format!("{} fps \t{}", fps, app.elapsed_frames());
+        if fps < 10_000_000.0 {
+            app.main_window().set_title(&s_fps);
+        }
+    }
+
+    let draw = app.draw();
+    draw.background().color(WHITE);
+
+    use std::time::Instant;
+    let now = Instant::now();
+
+    for _ in 0..50000 {
+        draw.ellipse()
+            .x_y(0.0, 0.0)
+            .width(5.0)
+            .height(5.0)
+            .color(BLUE);
+    }
+
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
+
+    draw.to_frame(app, &frame).unwrap();
+}
+
+fn update2(_app: &App, _model: &mut Model, _update: Update) {
     // Parallelized Particle Charge computation
     // Charge check only gives an performance increase for big numbers.
     _model.points.par_iter_mut().for_each(|particle| {
@@ -135,7 +166,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {
     });
 }
 
-fn view(app: &App, _model: &Model, frame: Frame) {
+fn view2(app: &App, _model: &Model, frame: Frame) {
     if app.elapsed_frames() % 10 == 0 {
         let fps = app.fps().round();
         let s_fps = format!("{} fps \t{}", fps, app.elapsed_frames());
