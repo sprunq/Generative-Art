@@ -29,6 +29,10 @@ impl Particle {
         }
         self.dir.x = angle.cos();
         self.dir.y = angle.sin();
+
+        //self.dir.x = angle.cos() * angle.tan() * 0.1;
+        //self.dir.y = self.dir.x.sin() * angle.cos();
+
         let mut vel = self.dir.clone();
         vel = vel.mul(self.speed);
         self.pos = self.pos.add(vel);

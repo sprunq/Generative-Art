@@ -40,10 +40,10 @@ impl PerlinField {
         let m_w = width / 2.0;
         let m_h = height / 2.0;
         self.particles.par_iter_mut().for_each(|particle| {
-            if particle.pos.x < -1.0 * m_w
-                || particle.pos.x > m_w
-                || particle.pos.y < -1.0 * m_h
-                || particle.pos.y > m_h
+            if particle.pos.x < -1.0 * m_w - 20.0
+                || particle.pos.x > m_w + 20.0
+                || particle.pos.y < -1.0 * m_h - 20.0
+                || particle.pos.y > m_h + 20.0
             {
                 particle.pos.x = random_f64() * width - width / 2.0;
                 particle.pos.y = random_f64() * height - height / 2.0;
