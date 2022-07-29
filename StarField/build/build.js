@@ -41,6 +41,9 @@ var lightSource;
 var maxDist;
 var charges = [];
 var particles = [];
+var vectorField = [];
+var vfResolition = 3;
+var vfWiggle = 0.1;
 function preload() {
 }
 function setup() {
@@ -82,20 +85,17 @@ function setup() {
         var pos = randomPointOnCircleEdge(circleSize * 0.7, width, height);
         charges.push(new Charge(pos.x, pos.y, random(-3000, 0)));
     }
+    calculateVectorField();
     drawStars();
 }
 function draw() {
     particles.forEach(function (particle, index, arr) {
         var old_pos = particle.pos.copy();
-        var force_sum = createVector(0, 0);
-        charges.forEach(function (charge) {
-            var force = charge.fieldForce(particle.pos);
-            force_sum.add(force);
-        });
+        var force = getVectorForce(particle.pos.x, particle.pos.y);
         if (particle.pos.dist(charges[1].pos) < 20) {
             arr.splice(index, 1);
         }
-        particle.move_particle(force_sum.heading());
+        particle.move_particle(force.heading());
         var new_pos = particle.pos.copy();
         strokeWeight(1);
         stroke(color(218, 0, 40, 4));
@@ -104,6 +104,10 @@ function draw() {
     console.log(particles.length, frameRate());
 }
 function drawSphere() {
+    var hue = 27;
+    var sat = 0;
+    var b = 5;
+    var a = 100;
     blendMode("source-over");
     fill(color(0, 0, 0, 255));
     circle(width / 2, height / 2, circleSize * 2);
@@ -116,13 +120,9 @@ function drawSphere() {
         var aLineLen = map(lenLine, 0, circleSize * 2, 1, 0.3, true);
         var midPoint = p1.add(p2).div(2);
         var dLight = midPoint.dist(lightSource);
-        var aLight = map(dLight, 0, 1100, 1, 0.25);
+        var aLight = map(dLight, 0, 1100, 0.25, 1.0);
         var alpha_1 = aLight * aLineLen;
-        var hue_1 = 27;
-        var sat = 100;
-        var b = 8;
-        var a = 100;
-        var baseColor = color(hue_1, sat - alpha_1 * sat, b, alpha_1 * a);
+        var baseColor = color(hue, sat - alpha_1 * sat, b, alpha_1 * a);
         stroke(baseColor);
         strokeWeight(1.0);
         line(p1.x, p1.y, p2.x, p2.y);
@@ -144,6 +144,39 @@ function drawStars() {
         fill(color(255));
         var w = random() * 1;
         ellipse(random(width), random(height), w, w);
+    }
+}
+function calculateVectorField() {
+    vectorField = [];
+    for (var x = 0; x < width; x += vfResolition) {
+        var row = [];
+        for (var y = 0; y < height; y += vfResolition) {
+            var force = calculateFieldForce(x, y);
+            row.push(force);
+        }
+        vectorField.push(row);
+    }
+}
+function calculateFieldForce(x, y) {
+    var force_sum = createVector(0, 0);
+    charges.forEach(function (charge) {
+        var force = charge.fieldForce(createVector(x, y));
+        force_sum.add(force);
+    });
+    return force_sum;
+}
+function getVectorForce(x, y) {
+    var x_f = Math.floor(x / vfResolition);
+    var y_f = Math.floor(y / vfResolition);
+    if (x_f < 0 || y_f < 0 || x_f > vectorField.length - 1 || y_f > vectorField[0].length - 1) {
+        return calculateFieldForce(x, y);
+    }
+    else {
+        var force = vectorField[x_f][y_f];
+        var wiggle = 0.1;
+        force.x += random() * vfWiggle - vfWiggle / 2;
+        force.y += random() * vfWiggle - vfWiggle / 2;
+        return force;
     }
 }
 function randomPointOnCircleEdge(max_r, w, h) {
