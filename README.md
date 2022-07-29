@@ -15,6 +15,10 @@
   <img src="/Attractors/pictures/PeterDeJong/588148.png" width="400px"/>
 </p>
 
+## [Star Electric Field](/StarField/)
+
+<img src="/StarField/pictures/star.png" width="800px"/>
+
 ## [Domain Warping](/DomainWarping/)
 
 <img src="/DomainWarping/Pictures/Desesrt/Desert_Ocean_Clouds_2.png" width="800px"/>
