@@ -6,7 +6,7 @@ class Particle {
     constructor(pos: p5.Vector, dir: p5.Vector) {
         this.pos = pos;
         this.dir = dir;
-        this.speed = 10;
+        this.speed = random(20);
     }
 
     move_particle(angle: number) {

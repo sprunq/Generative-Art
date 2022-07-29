@@ -8,6 +8,16 @@
     "rootDir": "./sketch/",
     "sourceMap": true,
     "target": "es5",
-    "moduleResolution": "node"
-  }
+    "moduleResolution": "node",
+    "allowJs": true,
+  },
+  "include": [
+    "./**/*"
+  ],
+  "exclude": [
+    "./plugins/**/*",
+    "./typings/**/*",
+    "./build/**/*", // This is what fixed it!
+    "./storage/**/*"
+  ]
 }
