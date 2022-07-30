@@ -2,7 +2,7 @@
  A collection of my art. Mostly produced with [p5js](https://p5js.org/) and [nannou](https://nannou.cc/).
 
 ## [Cosmic Oddity](/CosmicOddity/)
-<img src="/CosmicOddity/pictures/cosmic_oddity.png" width="800px"/>
+<img src="/CosmicOddity/pictures/cosmic_oddity_3_min.png" width="800px"/>
 <img src="/CosmicOddity/pictures/cosmic_dance_min.png" width="800px"/>
 
 ## [Electric Field](/ElectromagneticField/)
