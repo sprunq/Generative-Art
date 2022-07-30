@@ -25,7 +25,10 @@ function pointOnCircleEdge(max_r: number, w: number, h: number, angle: number): 
 }
 
 function onScreen(pos: p5.Vector) {
-    if (pos.x < 0 || pos.y < 0 || pos.x > g.width || pos.y > g.height) {
+    if (pos.x < 0 - particleOffScreenSpeed * 2
+        || pos.y < 0 - particleOffScreenSpeed * 2
+        || pos.x > g.width + particleOffScreenSpeed * 2
+        || pos.y > g.height + particleOffScreenSpeed * 2) {
         return false;
     }
     else {

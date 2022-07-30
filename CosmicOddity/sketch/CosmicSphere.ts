@@ -24,7 +24,7 @@ class CosmicSphere {
             var aLineLen = map(lenLine, 0.3, this.size * 2, 1, 0.3, true);
             var midPoint = p1.add(p2).div(2);
             var dLight = midPoint.dist(lightSource);
-            var aLight = map(dLight, 900, maxDist / 2, 0.0, 1.0);
+            var aLight = map(dLight, 900, maxDist / 2, 0.3, 1.0, true);
             var alpha_1 = aLight * aLineLen;
             var baseColor =
                 color(

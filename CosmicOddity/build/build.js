@@ -80,7 +80,7 @@ var CosmicSphere = (function () {
             var aLineLen = map(lenLine, 0.3, this.size * 2, 1, 0.3, true);
             var midPoint = p1.add(p2).div(2);
             var dLight = midPoint.dist(lightSource);
-            var aLight = map(dLight, 900, maxDist / 2, 0.0, 1.0);
+            var aLight = map(dLight, 900, maxDist / 2, 0.3, 1.0, true);
             var alpha_1 = aLight * aLineLen;
             var baseColor = color(this.col.a, this.col.b - alpha_1 * this.col.b, this.col.c, alpha_1 * this.col.d);
             g.stroke(baseColor);
@@ -179,7 +179,10 @@ function pointOnCircleEdge(max_r, w, h, angle) {
     return vec;
 }
 function onScreen(pos) {
-    if (pos.x < 0 || pos.y < 0 || pos.x > g.width || pos.y > g.height) {
+    if (pos.x < 0 - particleOffScreenSpeed * 2
+        || pos.y < 0 - particleOffScreenSpeed * 2
+        || pos.x > g.width + particleOffScreenSpeed * 2
+        || pos.y > g.height + particleOffScreenSpeed * 2) {
         return false;
     }
     else {
@@ -209,7 +212,7 @@ function setup() {
     var displayW = 1000;
     particleBaseSpeed = 30;
     particleOffScreenSpeed = 200;
-    vectorField = new VectorField(5, 0.3);
+    vectorField = new VectorField(10, 0.3);
     createCanvas(displayW, displayW / (renderW / renderH));
     colorMode(HSB, 360, 100, 100, 100);
     frameRate(300);
@@ -226,16 +229,14 @@ function setup() {
     setupScene();
 }
 function draw() {
-    particles.forEach(function (particle, index, arr) {
+    removeStuckParticles();
+    g.strokeWeight(1);
+    g.stroke(color(218, 0, 2, 100));
+    particles.forEach(function (particle) {
         var old_pos = particle.pos.copy();
         var force = vectorField.getVectorForce(particle.pos.x, particle.pos.y);
-        if (particle.pos.dist(vectorField.charges[0].pos) < 20) {
-            arr.splice(index, 1);
-        }
         particle.move_particle(force.heading());
         var new_pos = particle.pos.copy();
-        g.strokeWeight(1);
-        g.stroke(color(218, 0, 40, 4));
         if (onScreen(old_pos) && onScreen(new_pos)) {
             if (particle.speed == particleOffScreenSpeed)
                 particle.speed = random(particleBaseSpeed);
@@ -245,39 +246,66 @@ function draw() {
             particle.speed = particleOffScreenSpeed;
         }
     });
-    if (frameCount % 1 == 0)
-        updateGui();
+    updateGui();
     image(g, 0, 0, width, height);
 }
+function removeStuckParticles() {
+    particles.forEach(function (particle, index, arr) {
+        vectorField.charges.forEach(function (c) {
+            if (c.charge < 0) {
+                if (particle.pos.dist(c.pos) < particleBaseSpeed) {
+                    arr.splice(index, 1);
+                }
+            }
+        });
+    });
+}
 function setupScene() {
-    var col = new Vec4(27, 0, 5, 100);
-    var sp = new CosmicSphere(500, createVector(g.width / 2, g.height / 2), col, 20000);
-    spheres.push(sp);
-    sp.drawSphere();
-    var axisOffset = 20;
-    var p1 = pointOnCircleEdge(sp.size * 0.95, sp.pos.x * 2, sp.pos.y * 2, radians(90 - axisOffset));
-    var p2 = pointOnCircleEdge(sp.size * 0.95, sp.pos.x * 2, sp.pos.y * 2, radians(270 - axisOffset));
-    var c1 = new Charge(p1.x, p1.y, -500000);
-    var c2 = new Charge(p2.x, p2.y, 500000);
-    vectorField.charges.push(c1);
-    vectorField.charges.push(c2);
-    for (var i = 0; i < 20000; i++) {
-        var p = pointOnCircleEdge(30, c2.pos.x * 2, c2.pos.y * 2, radians(random(270 - axisOffset - 110, 270 - axisOffset + 110)));
-        particles.push(new Particle(p, random(particleBaseSpeed)));
-    }
-    for (var i = 0; i < 1500; i++) {
-        var p = pointOnCircleEdge(2500, g.width, g.height, radians(random(90 - axisOffset - 20, 90 - axisOffset + 20)));
-        particles.push(new Particle(p, random(particleBaseSpeed)));
+    var maxSize = 500;
+    var _loop_1 = function () {
+        var pos;
+        var minDist = 100000;
+        var calcTry = 0;
+        while (true) {
+            calcTry += 1;
+            if (calcTry > 200)
+                break;
+            pos = createVector(random(g.width * 0.1, g.width * 0.9), random(g.height * 0.2, g.height * 0.8));
+            if (spheres.length == 0)
+                break;
+            spheres.forEach(function (sphere) {
+                var dist = sphere.pos.dist(pos);
+                if (dist < minDist)
+                    minDist = dist;
+            });
+            if (minDist > maxSize + 100)
+                break;
+        }
+        var col = new Vec4(27, 0, 5, 100);
+        var spSize = random(50, maxSize);
+        var spIter = 50 * spSize;
+        var sp = new CosmicSphere(spSize, pos, col, spIter);
+        spheres.push(sp);
+        sp.drawSphere();
+        var axisOffset = random(-90, 90);
+        var p1 = pointOnCircleEdge(sp.size * 0.9, sp.pos.x * 2, sp.pos.y * 2, radians(90 - axisOffset));
+        var p2 = pointOnCircleEdge(sp.size * 0.9, sp.pos.x * 2, sp.pos.y * 2, radians(270 - axisOffset));
+        var c1 = new Charge(p1.x, p1.y, -10000 * sp.size);
+        var c2 = new Charge(p2.x, p2.y, 10000 * sp.size);
+        vectorField.charges.push(c1);
+        vectorField.charges.push(c2);
+        for (var i = 0; i < 14000; i++) {
+            var p = pointOnCircleEdge(30, c2.pos.x * 2, c2.pos.y * 2, radians(random(270 - axisOffset - 110, 270 - axisOffset + 110)));
+            particles.push(new Particle(p, random(particleBaseSpeed)));
+        }
+        for (var i = 0; i < 1500; i++) {
+            var p = pointOnCircleEdge(6000, g.width, g.height, radians(random(90 - axisOffset - 20, 90 - axisOffset + 20)));
+            particles.push(new Particle(p, random(particleBaseSpeed)));
+        }
+    };
+    for (var s = 0; s < 3; s++) {
+        _loop_1();
     }
     vectorField.calculateVectorField();
-    g.stroke(color(23, 0, 10, 40));
-    g.strokeWeight(1);
-    var angle = 4;
-    for (var i = 0; i < 0; i++) {
-        var p1_1 = pointOnCircleEdge(1800, c1.pos.x * 2, c1.pos.y * 2, radians(random(90 - axisOffset - angle, 90 - axisOffset + angle)));
-        g.line(c1.pos.x, c1.pos.y, p1_1.x, p1_1.y);
-        var p2_1 = pointOnCircleEdge(1800, c2.pos.x * 2, c2.pos.y * 2, radians(random(270 - axisOffset - angle, 270 - axisOffset + angle)));
-        g.line(c2.pos.x, c2.pos.y, p2_1.x, p2_1.y);
-    }
 }
 //# sourceMappingURL=build.js.map
