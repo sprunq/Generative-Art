@@ -75,7 +75,6 @@ function draw() {
 
 function mouseClicked() {
   console.log(mouseX, mouseY);
-
   return false;
 }
 
