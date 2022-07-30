@@ -3,6 +3,7 @@
 
 ## [Cosmic Oddity](/CosmicOddity/)
 <img src="/CosmicOddity/pictures/cosmic_oddity.png" width="800px"/>
+<img src="/CosmicOddity/pictures/cosmic_dance_min.png" width="800px"/>
 
 ## [Electric Field](/ElectromagneticField/)
 <img src="/ElectromagneticField/pictures/509066.png" width="800px"/>
