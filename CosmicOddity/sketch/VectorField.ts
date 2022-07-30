@@ -9,9 +9,9 @@ class VectorField {
     }
     calculateVectorField() {
         this.magneticField = [];
-        for (var x = 0; x < width; x += this.resolition) {
+        for (var x = 0; x < g.width; x += this.resolition) {
             let row: p5.Vector[] = [];
-            for (var y = 0; y < height; y += this.resolition) {
+            for (var y = 0; y < g.height; y += this.resolition) {
                 let force = this.calculateFieldForce(x, y);
                 row.push(force);
             }

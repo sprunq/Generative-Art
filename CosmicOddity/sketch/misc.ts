@@ -25,7 +25,7 @@ function pointOnCircleEdge(max_r: number, w: number, h: number, angle: number): 
 }
 
 function onScreen(pos: p5.Vector) {
-    if (pos.x < 0 || pos.y < 0 || pos.x > width || pos.y > height) {
+    if (pos.x < 0 || pos.y < 0 || pos.x > g.width || pos.y > g.height) {
         return false;
     }
     else {
@@ -37,6 +37,6 @@ function drawStars() {
     for (var i = 0; i < 1000; i++) {
         fill(color(255));
         let w = random() * 2;
-        ellipse(random(width), random(height), w, w)
+        g.ellipse(random(width), random(height), w, w)
     }
 }

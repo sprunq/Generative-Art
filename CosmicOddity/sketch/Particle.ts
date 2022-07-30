@@ -2,13 +2,11 @@ class Particle {
     pos: p5.Vector;
     dir: p5.Vector;
     speed: number;
-
-    constructor(pos: p5.Vector) {
+    constructor(pos: p5.Vector, speed: number) {
         this.pos = pos;
         this.dir = createVector(0, 0);
-        this.speed = random(20);
+        this.speed = speed;
     }
-
 
     move_particle(angle: number) {
         this.dir.x = cos(angle);
