@@ -10,7 +10,7 @@
 
 ## With normal p5js
 
-Copy the normal js code from build/build.js
+Copy the js code from build/build.js
 
 ## Example
 
