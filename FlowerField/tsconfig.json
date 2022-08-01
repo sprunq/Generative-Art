@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "none",
+    "noImplicitAny": true,
+    "outFile": "./build/build.js",
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "rootDir": "./sketch/",
+    "sourceMap": true,
+    "target": "es5",
+    "moduleResolution": "node",
+    "allowJs": true,
+  },
+  "include": [
+    "./**/*"
+  ],
+  "exclude": [
+    "./plugins/**/*",
+    "./typings/**/*",
+    "./build/**/*", // This is what fixed it!
+    "./storage/**/*"
+  ]
+}
