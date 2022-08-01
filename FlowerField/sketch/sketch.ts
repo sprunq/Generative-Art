@@ -1,12 +1,12 @@
 var noiseScale = 800;
 var noiseStrenght = 1;;
 
-var maxCurves = 200;
-var numSegmentsPerCurve = 40;
+var maxCurves = 300;
+var numSegmentsPerCurve = 30;
 var segmentLength = 10;
 var minDistance = 70;
 var minimumSegments = 3;
-let sideBuffer = -200;
+let sideBuffer = 800;
 
 let g: p5.Graphics;
 let curves: Curve[] = [];
@@ -34,7 +34,7 @@ function draw() {
     var c = new Curve(start);
     curves.push(c);
     c.computeVertecies();
-    var renderer = createTulipRenderer(c);
+    var renderer = createRoseRenderer(c);
     renderer.draw();
   }
   image(g, 0, 0, width, height);
@@ -46,18 +46,63 @@ function keyPressed() {
   }
 }
 
+function createRoseRenderer(curve: Curve): CurveRendererRose {
+  let angle =
+    noise(
+      curve.position.x / noiseScale,
+      curve.position.y / noiseScale
+    ) *
+    TWO_PI *
+    noiseStrenght;
+
+  let nA = map(degrees(angle), 0, 360, 0, 1);
+  let col_hue = nA > 0.5 ? map(nA, 0, 1, 305, 360) : map(nA, 0, 1, 0, 42)
+  let col_sat = random(10, 100);
+  let col_bri = 100;
+
+  let curveLength = curve.vertices.length;
+  let nLength = map(curveLength, minimumSegments, numSegmentsPerCurve, 0.8, 1.2)
+
+  let ls = floor(random(5, 7));
+  var leafSpacing = createVector(ls, ls);
+  var leafOffset = createVector(floor(random(1, 5)), floor(random(1, 5)));
+  var leafSize = 5.3 * nLength;
+  var flowerHeadSize = 2 * nLength;
+  var stemWeight = 8 * nLength;
+  var leafWeight = 8 * nLength;
+  var headWeight = 3 * nLength;
+  var stemColor = color(random(83, 130), random(50, 100), random(40, 70), 100);
+  var leafColor = color(random(83, 130), random(50, 100), random(30, 60), 100);
+  var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
+  var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
+  var c = new CurveRendererRose(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
+  return c;
+}
+
 function createTulipRenderer(curve: Curve): CurveRendererTulip {
-  let col_hue = random() < 0.5 ? random(275, 359) : random(0, 49);
+  let angle =
+    noise(
+      curve.position.x / noiseScale,
+      curve.position.y / noiseScale
+    ) *
+    TWO_PI *
+    noiseStrenght;
+
+  let nA = map(degrees(angle), 0, 360, 0, 1);
+  let col_hue = nA > 0.5 ? map(nA, 0, 1, 275, 360) : map(nA, 0, 1, 0, 49)
   let col_sat = random(20, 100);
   let col_bri = 100;
 
+  let curveLength = curve.vertices.length;
+  let nLength = map(curveLength, minimumSegments, numSegmentsPerCurve, 0.8, 1.2)
+
   var leafSpacing = createVector(14, 14);
   var leafOffset = createVector(3, 10);
-  var leafSize = randomGaussian(1.0, 0.2);
-  var flowerHeadSize = randomGaussian(2.1, 0.2);
-  var stemWeight = randomGaussian(10, 2);
-  var leafWeight = 8;
-  var headWeight = 3;
+  var leafSize = 1.5 * nLength;
+  var flowerHeadSize = 1.9 * nLength;
+  var stemWeight = 8 * nLength;
+  var leafWeight = 8 * nLength;
+  var headWeight = 3 * nLength;
   var stemColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
   var leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
   var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
@@ -65,7 +110,6 @@ function createTulipRenderer(curve: Curve): CurveRendererTulip {
   var c = new CurveRendererTulip(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
   return c;
 }
-
 
 function createBasicRenderer(curve: Curve): CurveRendererBasic {
   var stemWeight = randomGaussian(10, 2);

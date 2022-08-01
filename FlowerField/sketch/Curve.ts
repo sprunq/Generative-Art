@@ -42,7 +42,12 @@ class Curve {
                 }
             }
         }
+        if (this.checkCircularBoundingBox(position, sideBuffer)) return true;
 
+        return false;
+    }
+
+    private checkBoundingBox(position: p5.Vector): boolean {
         if (position.x + minDistance > g.width + sideBuffer) {
             return true;
         }
@@ -57,5 +62,10 @@ class Curve {
         }
 
         return false;
+    }
+
+    private checkCircularBoundingBox(position: p5.Vector, radius: number): boolean {
+        let dist = createVector(g.width / 2, g.height / 2).dist(position);
+        return dist > radius ? true : false;
     }
 }
