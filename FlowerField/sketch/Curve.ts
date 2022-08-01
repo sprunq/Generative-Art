@@ -2,14 +2,10 @@ class Curve {
     start: p5.Vector;
     position: p5.Vector;
     vertices: p5.Vector[];
-    col: p5.Color;
-    weight: number;
 
-    constructor(start: p5.Vector, c: p5.Color, weight: number) {
+    constructor(start: p5.Vector) {
         this.start = start;
-        this.col = c;
         this.vertices = [];
-        this.weight = weight;
     }
 
     computeVertecies() {
@@ -32,26 +28,6 @@ class Curve {
             }
             this.vertices.push(this.position.copy());
         }
-    }
-
-    draw() {
-        if (this.canDrawCurve())
-            this.drawCurve();
-    }
-
-    protected drawCurve() {
-        g.beginShape();
-        g.noFill();
-        g.strokeWeight(this.weight);
-        g.stroke(this.col);
-        for (const vert of this.vertices) {
-            g.vertex(vert.x, vert.y);
-        }
-        g.endShape();
-    }
-
-    protected canDrawCurve(): boolean {
-        return this.vertices.length > minimumSegments;
     }
 
     private isTooClose(position: p5.Vector): boolean {

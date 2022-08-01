@@ -1,8 +1,8 @@
-class CurveBasicFlower extends Curve {
+class CurveRendererBasic extends CurveRenderer {
     leafWeight: number;
 
-    constructor(start: p5.Vector, c: p5.Color, weight: number, leafWeight: number) {
-        super(start, c, weight);
+    constructor(curve: Curve, c: p5.Color, weight: number, leafWeight: number) {
+        super(curve, weight, c);
         this.leafWeight = leafWeight;
     }
 
@@ -10,12 +10,12 @@ class CurveBasicFlower extends Curve {
         if (this.canDrawCurve()) {
             this.drawLeaves();
             this.drawCurve();
-            this.drawFlowerHead(this.position.x, this.position.y, 30);
+            this.drawFlowerHead(this.curve.position.x, this.curve.position.y, 30);
         }
     }
 
     private drawLeaves() {
-        for (var i = 0; i < this.vertices.length; i++) {
+        for (var i = 0; i < this.curve.vertices.length; i++) {
             if (i % 8 == 0) {
                 let angle = random() > 0.5 ? 20 : -20;
                 this.drawLeaf(i, 8, angle);
@@ -24,11 +24,11 @@ class CurveBasicFlower extends Curve {
     }
 
     private drawLeaf(index: number, lookahead: number, angle: number) {
-        if (this.vertices.length <= index + lookahead) return;
+        if (this.curve.vertices.length <= index + lookahead) return;
         g.strokeWeight(this.leafWeight);
-        g.stroke(color(49, 176, 58));
-        let v0 = this.vertices[index];
-        let v1 = this.vertices[index + lookahead];
+        g.stroke(color(random(83, 130), random(50, 100), random(50, 100), 100));
+        let v0 = this.curve.vertices[index];
+        let v1 = this.curve.vertices[index + lookahead];
         let vr = v0.copy().add(v1).div(2);
         let p2 = rotateVectorAround(v0.x, v0.y, angle, vr);
         g.line(v0.x, v0.y, p2.x, p2.y);

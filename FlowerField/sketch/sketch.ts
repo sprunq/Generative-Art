@@ -31,15 +31,22 @@ function draw() {
 
   var start = spp.getStartingPoint();
   if (start != null) {
-    var c = createTulip(start);
+    var c = new Curve(start);
     curves.push(c);
     c.computeVertecies();
-    c.draw();
+    var renderer = createTulipRenderer(c);
+    renderer.draw();
   }
   image(g, 0, 0, width, height);
 }
 
-function createTulip(pos: p5.Vector): CurveTulip {
+function keyPressed() {
+  if (key == 's') {
+    saveCanvas(g, "canvas.png");
+  }
+}
+
+function createTulipRenderer(curve: Curve): CurveRendererTulip {
   let col_hue = random() < 0.5 ? random(275, 359) : random(0, 49);
   let col_sat = random(20, 100);
   let col_bri = 100;
@@ -55,14 +62,18 @@ function createTulip(pos: p5.Vector): CurveTulip {
   var leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
   var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
   var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
-  var c = new CurveTulip(pos, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
+  var c = new CurveRendererTulip(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
   return c;
 }
 
-function keyPressed() {
-  if (key == 's') {
-    saveCanvas(g, "canvas.png");
 
-  }
+function createBasicRenderer(curve: Curve): CurveRendererBasic {
+  var stemWeight = randomGaussian(10, 2);
+  var leafWeight = 8;
+  var stemColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
+  var c = new CurveRendererBasic(curve, stemColor, stemWeight, leafWeight);
+  return c;
 }
+
+
 

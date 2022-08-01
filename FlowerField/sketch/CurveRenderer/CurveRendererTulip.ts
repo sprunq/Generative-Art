@@ -1,4 +1,4 @@
-class CurveTulip extends Curve {
+class CurveRendererTulip extends CurveRenderer {
     leafColor: p5.Color;
     leafSize: any;
     flowerHeadSize: any;
@@ -10,7 +10,7 @@ class CurveTulip extends Curve {
     leafOffset: p5.Vector;
 
     constructor(
-        startPosition: p5.Vector,
+        curve: Curve,
         leafSpacing: p5.Vector,
         leafOffset: p5.Vector,
         leafSize: number,
@@ -23,7 +23,7 @@ class CurveTulip extends Curve {
         headColorMain: p5.Color,
         headColorAccent: p5.Color,
     ) {
-        super(startPosition, stemColor, stemWeight);
+        super(curve, stemWeight, stemColor);
         this.leafWeight = leafWeight;
         this.headWeight = headWeight;
         this.leafColor = leafColor;
@@ -39,25 +39,25 @@ class CurveTulip extends Curve {
         if (this.canDrawCurve()) {
             this.drawLeaves();
             this.drawCurve();
-            this.drawFlowerHead(this.position.x, this.position.y, this.flowerHeadSize);
+            this.drawFlowerHead(this.curve.position.x, this.curve.position.y, this.flowerHeadSize);
         }
     }
 
     private drawLeaves() {
-        for (var i = this.leafOffset.x; i < this.vertices.length; i += this.leafSpacing.x) {
+        for (var i = this.leafOffset.x; i < this.curve.vertices.length; i += this.leafSpacing.x) {
             this.drawLeaf(i, 8, true, this.leafSize);
         }
-        for (var i = this.leafOffset.y; i < this.vertices.length; i += this.leafSpacing.y) {
+        for (var i = this.leafOffset.y; i < this.curve.vertices.length; i += this.leafSpacing.y) {
             this.drawLeaf(i, 8, false, this.leafSize);
         }
     }
 
     private drawLeaf(index: number, lookahead: number, leafSide: boolean, scale: number) {
-        if (this.vertices.length <= index + lookahead) return;
+        if (this.curve.vertices.length <= index + lookahead) return;
         let c = this.leafColor;
 
-        let v0 = this.vertices[index];
-        let v1 = this.vertices[index + lookahead];
+        let v0 = this.curve.vertices[index];
+        let v1 = this.curve.vertices[index + lookahead];
         if (v0 == undefined || v1 == undefined) { return; }
         let vr = v0.copy().add(v1).div(2);
 
@@ -90,10 +90,10 @@ class CurveTulip extends Curve {
 
     private drawFlowerHead(x: number, y: number, scale: number) {
         scale *= -1;
-        let vertLen = this.vertices.length;
+        let vertLen = this.curve.vertices.length;
         if (vertLen < 3) return;
-        let v0 = this.vertices[vertLen - 1];
-        let v1 = this.vertices[vertLen - 2];
+        let v0 = this.curve.vertices[vertLen - 1];
+        let v1 = this.curve.vertices[vertLen - 2];
         let vr = v0.copy().add(v1).div(2);
 
         let points: p5.Vector[] = [];
