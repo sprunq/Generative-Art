@@ -51,8 +51,9 @@ class CurveRendererRose extends CurveRenderer {
     }
 
     private drawLeafSide(side: boolean) {
-
-        for (var i = this.leafOffset.x; i < this.curve.vertices.length - 5; i += this.leafSpacing.x) {
+        let startPos = side ? this.leafOffset.x : this.leafOffset.y;
+        let spacing = side ? this.leafSpacing.x : this.leafSpacing.y;
+        for (var i = startPos; i < this.curve.vertices.length - 5; i += spacing) {
             let progress = map(i, 0, this.curve.vertices.length, 0, 1);
             if (random() > this.leafFlowerHeadChance || progress < 0.6)
                 this.drawLeaf(i, 1, side, this.leafSize);

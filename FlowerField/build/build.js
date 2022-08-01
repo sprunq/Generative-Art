@@ -51,7 +51,7 @@ class CircleLimiter extends Limiter {
 }
 class RectLimiter extends Limiter {
     isInLimit(pos) {
-        return this.checkBoundingBox(pos, this.dist);
+        return this.checkBoundingBox(pos, this.dist * -1);
     }
     checkBoundingBox(position, sideBuffer) {
         if (position.x + minDistance > g.width + sideBuffer) {
@@ -139,21 +139,20 @@ function scaleVectorRelativeTo(x, y, scaleFactor, vecToScale) {
 }
 var noiseScale = 800;
 var noiseStrenght = 1;
-;
-var maxCurves = 400;
+var sideBuffer = -200;
+var limiter = new RectLimiter(sideBuffer);
+var maxCurves = 2000;
 var numSegmentsPerCurve = 20;
 var segmentLength = 10;
-var minDistance = 75;
+var minDistance = 80;
 var minimumSegments = 3;
-let sideBuffer = 1000;
-let g;
-let curves = [];
+var renderW = 3000;
+var renderH = 3000;
+var displayW = 1000;
+var g;
+var curves = [];
 var spp;
-var limiter;
 function setup() {
-    let renderW = 2500;
-    let renderH = 2500;
-    let displayW = 1000;
     createCanvas(displayW, displayW / (renderW / renderH));
     g = createGraphics(renderW, renderH);
     g.background(242, 255, 191);
@@ -161,32 +160,38 @@ function setup() {
     angleMode(DEGREES);
     colorMode(HSB, 360, 100, 100, 100);
     spp = new StartingPointPicker();
-    limiter = new CircleLimiter(sideBuffer);
 }
 function draw() {
-    if (curves.length >= maxCurves) {
-        noLoop();
-        return;
-    }
-    var start = spp.getStartingPoint();
-    if (start != null) {
-        var c = new Curve(start, limiter);
-        curves.push(c);
-        c.computeVertecies();
-        var renderer;
-        var type = floor(random(0, 2));
-        switch (type) {
-            case 0:
-                renderer = createTulipRenderer(c);
-                break;
-            case 1:
-                renderer = createRoseRenderer(c);
-                break;
-            default: break;
+    let batchDraw = 5;
+    let failedAttempts = 0;
+    for (var n = 0; n < batchDraw; n++) {
+        var start = spp.getStartingPoint();
+        if (start == null) {
+            failedAttempts++;
         }
-        renderer.draw();
+        else {
+            var c = new Curve(start, limiter);
+            curves.push(c);
+            c.computeVertecies();
+            var renderer;
+            var type = floor(random(0, 2));
+            switch (type) {
+                case 0:
+                    renderer = createTulipRenderer(c);
+                    break;
+                case 1:
+                    renderer = createRoseRenderer(c);
+                    break;
+                default: break;
+            }
+            renderer.draw();
+        }
     }
     image(g, 0, 0, width, height);
+    if (failedAttempts >= batchDraw * 0.5 || curves.length >= maxCurves) {
+        noLoop();
+        console.log("done");
+    }
 }
 function keyPressed() {
     if (key == 's') {
@@ -199,7 +204,7 @@ function createRoseRenderer(curve) {
         noiseStrenght;
     let nA = map(degrees(angle), 0, 360, 0, 1);
     let col_hue = nA > 0.5 ? map(nA, 0, 1, 305, 360) : map(nA, 0, 1, 0, 42);
-    let col_sat = random(10, 100);
+    let col_sat = random(10, 95);
     let col_bri = 100;
     let curveLength = curve.vertices.length;
     let nLength = map(curveLength, minimumSegments, numSegmentsPerCurve, 0.8, 1.2);
@@ -224,8 +229,8 @@ function createTulipRenderer(curve) {
         TWO_PI *
         noiseStrenght;
     let nA = map(degrees(angle), 0, 360, 0, 1);
-    let col_hue = nA > 0.5 ? map(nA, 0, 1, 275, 360) : map(nA, 0, 1, 0, 49);
-    let col_sat = random(20, 100);
+    let col_hue = nA > 0.5 ? map(nA, 0, 1, 275, 360) : map(nA, 0, 1, 0, 70);
+    let col_sat = random(20, 90);
     let col_bri = 100;
     let curveLength = curve.vertices.length;
     let nLength = map(curveLength, minimumSegments, numSegmentsPerCurve, 0.8, 1.2);
@@ -342,7 +347,9 @@ class CurveRendererRose extends CurveRenderer {
         }
     }
     drawLeafSide(side) {
-        for (var i = this.leafOffset.x; i < this.curve.vertices.length - 5; i += this.leafSpacing.x) {
+        let startPos = side ? this.leafOffset.x : this.leafOffset.y;
+        let spacing = side ? this.leafSpacing.x : this.leafSpacing.y;
+        for (var i = startPos; i < this.curve.vertices.length - 5; i += spacing) {
             let progress = map(i, 0, this.curve.vertices.length, 0, 1);
             if (random() > this.leafFlowerHeadChance || progress < 0.6)
                 this.drawLeaf(i, 1, side, this.leafSize);

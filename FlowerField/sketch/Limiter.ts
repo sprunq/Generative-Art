@@ -20,7 +20,7 @@ class CircleLimiter extends Limiter {
 
 class RectLimiter extends Limiter {
     public isInLimit(pos: p5.Vector): boolean {
-        return this.checkBoundingBox(pos, this.dist);
+        return this.checkBoundingBox(pos, this.dist * -1);
     }
 
     private checkBoundingBox(position: p5.Vector, sideBuffer: number): boolean {
