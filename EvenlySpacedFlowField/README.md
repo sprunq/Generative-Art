@@ -10,8 +10,8 @@
 
 ## With normal p5js
 
-Copy the normal js code from build/build.js
+Copy the js code from build/build.js
 
 ## Example
 
-<img src="/EvenlySpacedFlowField/pictures/example.png" width="800px"/>
+<img src="/EvenlySpacedFlowField/pictures/example.png"/>
