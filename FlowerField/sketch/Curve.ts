@@ -2,10 +2,13 @@ class Curve {
     start: p5.Vector;
     position: p5.Vector;
     vertices: p5.Vector[];
+    limiter: Limiter;
 
-    constructor(start: p5.Vector) {
+
+    constructor(start: p5.Vector, limiter: Limiter) {
         this.start = start;
         this.vertices = [];
+        this.limiter = limiter;
     }
 
     computeVertecies() {
@@ -42,30 +45,6 @@ class Curve {
                 }
             }
         }
-        if (this.checkCircularBoundingBox(position, sideBuffer)) return true;
-
-        return false;
-    }
-
-    private checkBoundingBox(position: p5.Vector): boolean {
-        if (position.x + minDistance > g.width + sideBuffer) {
-            return true;
-        }
-        if (position.x - minDistance < 0 - sideBuffer) {
-            return true;
-        }
-        if (position.y + minDistance > g.height + sideBuffer) {
-            return true;
-        }
-        if (position.y - minDistance < 0 - sideBuffer) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private checkCircularBoundingBox(position: p5.Vector, radius: number): boolean {
-        let dist = createVector(g.width / 2, g.height / 2).dist(position);
-        return dist > radius ? true : false;
+        return this.limiter.isInLimit(position) ? true : false;
     }
 }

@@ -11,6 +11,7 @@ let sideBuffer = 800;
 let g: p5.Graphics;
 let curves: Curve[] = [];
 var spp: StartingPointPicker;
+var limiter: Limiter;
 
 function setup() {
   let renderW = 2000;
@@ -24,6 +25,7 @@ function setup() {
   colorMode(HSB, 360, 100, 100, 100);
 
   spp = new StartingPointPicker();
+  limiter = new CircleLimiter(sideBuffer);
 }
 
 function draw() {
@@ -31,10 +33,20 @@ function draw() {
 
   var start = spp.getStartingPoint();
   if (start != null) {
-    var c = new Curve(start);
+    var c = new Curve(start, limiter);
     curves.push(c);
     c.computeVertecies();
-    var renderer = createRoseRenderer(c);
+    var renderer: CurveRenderer;
+    var type = floor(random(0, 2));
+    switch (type) {
+      case 0:
+        renderer = createTulipRenderer(c);
+        break;
+      case 1:
+        renderer = createRoseRenderer(c);
+        break;
+      default: break;
+    }
     renderer.draw();
   }
   image(g, 0, 0, width, height);
@@ -104,7 +116,7 @@ function createTulipRenderer(curve: Curve): CurveRendererTulip {
   var leafWeight = 8 * nLength;
   var headWeight = 3 * nLength;
   var stemColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
-  var leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
+  var leafColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
   var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
   var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
   var c = new CurveRendererTulip(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);

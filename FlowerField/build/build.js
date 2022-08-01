@@ -1,7 +1,8 @@
 class Curve {
-    constructor(start) {
+    constructor(start, limiter) {
         this.start = start;
         this.vertices = [];
+        this.limiter = limiter;
     }
     computeVertecies() {
         this.position = this.start.copy();
@@ -31,11 +32,28 @@ class Curve {
                 }
             }
         }
-        if (this.checkCircularBoundingBox(position, sideBuffer))
-            return true;
-        return false;
+        return this.limiter.isInLimit(position) ? true : false;
     }
-    checkBoundingBox(position) {
+}
+class Limiter {
+    constructor(dist) {
+        this.dist = dist;
+    }
+}
+class CircleLimiter extends Limiter {
+    isInLimit(pos) {
+        return this.checkCircularBoundingBox(pos, this.dist);
+    }
+    checkCircularBoundingBox(position, radius) {
+        let dist = createVector(g.width / 2, g.height / 2).dist(position);
+        return dist > radius ? true : false;
+    }
+}
+class RectLimiter extends Limiter {
+    isInLimit(pos) {
+        return this.checkBoundingBox(pos, this.dist);
+    }
+    checkBoundingBox(position, sideBuffer) {
         if (position.x + minDistance > g.width + sideBuffer) {
             return true;
         }
@@ -49,10 +67,6 @@ class Curve {
             return true;
         }
         return false;
-    }
-    checkCircularBoundingBox(position, radius) {
-        let dist = createVector(g.width / 2, g.height / 2).dist(position);
-        return dist > radius ? true : false;
     }
 }
 class StartingPointPicker {
@@ -135,6 +149,7 @@ let sideBuffer = 800;
 let g;
 let curves = [];
 var spp;
+var limiter;
 function setup() {
     let renderW = 2000;
     let renderH = 2000;
@@ -146,6 +161,7 @@ function setup() {
     angleMode(DEGREES);
     colorMode(HSB, 360, 100, 100, 100);
     spp = new StartingPointPicker();
+    limiter = new CircleLimiter(sideBuffer);
 }
 function draw() {
     if (curves.length >= maxCurves) {
@@ -154,10 +170,20 @@ function draw() {
     }
     var start = spp.getStartingPoint();
     if (start != null) {
-        var c = new Curve(start);
+        var c = new Curve(start, limiter);
         curves.push(c);
         c.computeVertecies();
-        var renderer = createRoseRenderer(c);
+        var renderer;
+        var type = floor(random(0, 2));
+        switch (type) {
+            case 0:
+                renderer = createTulipRenderer(c);
+                break;
+            case 1:
+                renderer = createRoseRenderer(c);
+                break;
+            default: break;
+        }
         renderer.draw();
     }
     image(g, 0, 0, width, height);
@@ -210,7 +236,7 @@ function createTulipRenderer(curve) {
     var leafWeight = 8 * nLength;
     var headWeight = 3 * nLength;
     var stemColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
-    var leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
+    var leafColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
     var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
     var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
     var c = new CurveRendererTulip(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
