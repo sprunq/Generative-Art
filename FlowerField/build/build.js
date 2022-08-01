@@ -140,19 +140,19 @@ function scaleVectorRelativeTo(x, y, scaleFactor, vecToScale) {
 var noiseScale = 800;
 var noiseStrenght = 1;
 ;
-var maxCurves = 300;
-var numSegmentsPerCurve = 30;
+var maxCurves = 400;
+var numSegmentsPerCurve = 20;
 var segmentLength = 10;
-var minDistance = 70;
+var minDistance = 75;
 var minimumSegments = 3;
-let sideBuffer = 800;
+let sideBuffer = 1000;
 let g;
 let curves = [];
 var spp;
 var limiter;
 function setup() {
-    let renderW = 2000;
-    let renderH = 2000;
+    let renderW = 2500;
+    let renderH = 2500;
     let displayW = 1000;
     createCanvas(displayW, displayW / (renderW / renderH));
     g = createGraphics(renderW, renderH);
@@ -207,6 +207,7 @@ function createRoseRenderer(curve) {
     var leafSpacing = createVector(ls, ls);
     var leafOffset = createVector(floor(random(1, 5)), floor(random(1, 5)));
     var leafSize = 5.3 * nLength;
+    var leafFlowerHeadChance = 0.2;
     var flowerHeadSize = 2 * nLength;
     var stemWeight = 8 * nLength;
     var leafWeight = 8 * nLength;
@@ -215,7 +216,7 @@ function createRoseRenderer(curve) {
     var leafColor = color(random(83, 130), random(50, 100), random(30, 60), 100);
     var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
     var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
-    var c = new CurveRendererRose(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
+    var c = new CurveRendererRose(curve, leafSpacing, leafOffset, leafSize, leafFlowerHeadChance, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
     return c;
 }
 function createTulipRenderer(curve) {
@@ -317,7 +318,7 @@ class CurveRendererBasic extends CurveRenderer {
     }
 }
 class CurveRendererRose extends CurveRenderer {
-    constructor(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent) {
+    constructor(curve, leafSpacing, leafOffset, leafSize, leafFlowerHeadChance, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent) {
         super(curve, stemWeight, stemColor);
         this.leafWeight = leafWeight;
         this.headWeight = headWeight;
@@ -328,20 +329,31 @@ class CurveRendererRose extends CurveRenderer {
         this.headColorMain = headColorMain;
         this.headColorAccent = headColorAccent;
         this.leafOffset = leafOffset;
+        this.leafFlowerHeadChance = leafFlowerHeadChance;
+        this.flowerHeadIndex = [];
     }
     draw() {
         if (this.canDrawCurve()) {
-            this.drawLeaves();
             this.drawCurve();
-            this.drawFlowerHead(this.curve.position.x, this.curve.position.y, this.flowerHeadSize);
+            this.drawLeafSide(true);
+            this.drawLeafSide(false);
+            this.drawExtraFlowerHeads();
+            this.drawFlowerHead(this.curve.vertices.length, this.flowerHeadSize, 0);
         }
     }
-    drawLeaves() {
+    drawLeafSide(side) {
         for (var i = this.leafOffset.x; i < this.curve.vertices.length - 5; i += this.leafSpacing.x) {
-            this.drawLeaf(i, 1, true, this.leafSize);
+            let progress = map(i, 0, this.curve.vertices.length, 0, 1);
+            if (random() > this.leafFlowerHeadChance || progress < 0.6)
+                this.drawLeaf(i, 1, side, this.leafSize);
+            else
+                this.flowerHeadIndex.push([i, side]);
         }
-        for (var i = this.leafOffset.y; i < this.curve.vertices.length - 5; i += this.leafSpacing.y) {
-            this.drawLeaf(i, 1, false, this.leafSize);
+    }
+    drawExtraFlowerHeads() {
+        for (const t of this.flowerHeadIndex) {
+            let fact = t[1] ? 1 : -1;
+            this.drawFlowerHead(t[0], this.flowerHeadSize * random(0.6, 0.8), random(fact * 30, fact * 60));
         }
     }
     drawLeaf(index, lookahead, leafSide, scale) {
@@ -387,14 +399,15 @@ class CurveRendererRose extends CurveRenderer {
         g.line(v0.x, v0.y, pE.x, pE.y);
         colorMode(HSB);
     }
-    drawFlowerHead(x, y, scale) {
+    drawFlowerHead(index, scale, angle) {
         scale *= -1;
-        let vertLen = this.curve.vertices.length;
-        if (vertLen < 3)
+        let v0 = this.curve.vertices[index - 1];
+        let v1 = this.curve.vertices[index - 2];
+        if (v0 == undefined || v1 == undefined) {
             return;
-        let v0 = this.curve.vertices[vertLen - 1];
-        let v1 = this.curve.vertices[vertLen - 2];
+        }
         let vr = v0.copy().add(v1).div(2);
+        vr = rotateVectorAround(v0.x, v0.y, angle, vr);
         let endPoint;
         let points = [];
         for (var mirror = -1; mirror < 2; mirror += 2) {

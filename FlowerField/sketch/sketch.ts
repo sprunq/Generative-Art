@@ -1,12 +1,12 @@
 var noiseScale = 800;
 var noiseStrenght = 1;;
 
-var maxCurves = 300;
-var numSegmentsPerCurve = 30;
+var maxCurves = 400;
+var numSegmentsPerCurve = 20;
 var segmentLength = 10;
-var minDistance = 70;
+var minDistance = 75;
 var minimumSegments = 3;
-let sideBuffer = 800;
+let sideBuffer = 1000;
 
 let g: p5.Graphics;
 let curves: Curve[] = [];
@@ -14,8 +14,8 @@ var spp: StartingPointPicker;
 var limiter: Limiter;
 
 function setup() {
-  let renderW = 2000;
-  let renderH = 2000;
+  let renderW = 2500;
+  let renderH = 2500;
   let displayW = 1000;
   createCanvas(displayW, displayW / (renderW / renderH));
   g = createGraphics(renderW, renderH);
@@ -79,6 +79,7 @@ function createRoseRenderer(curve: Curve): CurveRendererRose {
   var leafSpacing = createVector(ls, ls);
   var leafOffset = createVector(floor(random(1, 5)), floor(random(1, 5)));
   var leafSize = 5.3 * nLength;
+  var leafFlowerHeadChance = 0.2;
   var flowerHeadSize = 2 * nLength;
   var stemWeight = 8 * nLength;
   var leafWeight = 8 * nLength;
@@ -87,7 +88,7 @@ function createRoseRenderer(curve: Curve): CurveRendererRose {
   var leafColor = color(random(83, 130), random(50, 100), random(30, 60), 100);
   var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
   var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
-  var c = new CurveRendererRose(curve, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
+  var c = new CurveRendererRose(curve, leafSpacing, leafOffset, leafSize, leafFlowerHeadChance, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
   return c;
 }
 
