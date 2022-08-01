@@ -108,16 +108,18 @@ class CurveBasicFlower extends Curve {
         g.ellipse(x - 2, y - 7, 22, 22);
     }
 }
-class CurveSandbox extends Curve {
-    constructor(start, c, weight, leafWeight) {
-        super(start, c, weight);
-        this.leafWeight = leafWeight;
+class CurveLilac extends Curve {
+    constructor(start, stemColor, leafColor, weight, leafSize, flowerHeadSize) {
+        super(start, stemColor, weight);
+        this.leafColor = leafColor;
+        this.leafSize = leafSize;
+        this.flowerHeadSize = flowerHeadSize;
     }
     draw() {
         if (this.canDrawCurve()) {
             this.drawLeaves();
             this.drawCurve();
-            this.drawFlowerHead(this.position.x, this.position.y, 2);
+            this.drawFlowerHead(this.position.x, this.position.y, this.flowerHeadSize);
         }
     }
     drawLeaves() {
@@ -126,130 +128,7 @@ class CurveSandbox extends Curve {
             if (i % 8 == 0) {
                 let side = sideChange ? true : false;
                 sideChange = !sideChange;
-                this.drawLeaf(i, 8, side, 0.8);
-            }
-        }
-    }
-    drawLeaf(index, lookahead, leafSide, scale) {
-        if (this.vertices.length <= index + lookahead)
-            return;
-        let c = color(random(83, 130), random(20, 100), random(50, 100), 100);
-        let v0 = this.vertices[index];
-        let v1 = this.vertices[index + lookahead];
-        let vr = v0.copy().add(v1).div(2);
-        let points = [];
-        let sideFact = leafSide ? 1 : -1;
-        points.push(v0);
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.01 * scale, rotateVectorAround(v0.x, v0.y, 60 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.1 * scale, rotateVectorAround(v0.x, v0.y, 60 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.4 * scale, rotateVectorAround(v0.x, v0.y, 60 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.6 * scale, rotateVectorAround(v0.x, v0.y, 50 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.0 * scale, rotateVectorAround(v0.x, v0.y, 40 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.85 * scale, rotateVectorAround(v0.x, v0.y, 23 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 2.0 * scale, rotateVectorAround(v0.x, v0.y, 20 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.5 * scale, rotateVectorAround(v0.x, v0.y, 22 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.0 * scale, rotateVectorAround(v0.x, v0.y, 17 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 10 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.3 * scale, rotateVectorAround(v0.x, v0.y, 5 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.2 * scale, rotateVectorAround(v0.x, v0.y, 1 * sideFact, vr)));
-        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.1 * scale, rotateVectorAround(v0.x, v0.y, 0 * sideFact, vr)));
-        g.strokeWeight(this.leafWeight);
-        g.stroke(c);
-        g.fill(c);
-        g.beginShape();
-        for (const vert of points) {
-            g.vertex(vert.x, vert.y);
-        }
-        g.endShape();
-    }
-    drawFlowerHead(x, y, scale) {
-        let col_hue = random() < 0.5 ? random(275, 359) : random(0, 49);
-        let col_sat = random(20, 100);
-        let col_bri = 100;
-        let c = color(col_hue, col_sat, col_bri * 0.9, 100);
-        let mC = color(col_hue, col_sat, col_bri * 1.0, 100);
-        scale *= -1;
-        let vertLen = this.vertices.length;
-        if (vertLen < 3)
-            return;
-        let v0 = this.vertices[vertLen - 1];
-        let v1 = this.vertices[vertLen - 2];
-        let vr = v0.copy().add(v1).div(2);
-        let points = [];
-        for (var mirror = -1; mirror < 2; mirror += 2) {
-            points.push(v0);
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 2.5 * scale, rotateVectorAround(v0.x, v0.y, 60 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 3.0 * scale, rotateVectorAround(v0.x, v0.y, 50 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 3.3 * scale, rotateVectorAround(v0.x, v0.y, 40 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.0 * scale, rotateVectorAround(v0.x, v0.y, 30 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 5.0 * scale, rotateVectorAround(v0.x, v0.y, 30 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.5 * scale, rotateVectorAround(v0.x, v0.y, 20 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.2 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 3 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 2 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            points.push(scaleVectorRelativeTo(v0.x, v0.y, 0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            points.push(v0);
-        }
-        g.strokeWeight(5);
-        g.stroke(c);
-        g.fill(c);
-        g.beginShape();
-        for (const vert of points) {
-            g.curveVertex(vert.x, vert.y);
-        }
-        g.endShape();
-        let pointsLeaf = [];
-        for (var mirror = -1; mirror < 2; mirror += 2) {
-            pointsLeaf.push(v0);
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 1.3 * scale, rotateVectorAround(v0.x, v0.y, 50 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 2.0 * scale, rotateVectorAround(v0.x, v0.y, 40 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 3.0 * scale, rotateVectorAround(v0.x, v0.y, 25 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 4.0 * scale, rotateVectorAround(v0.x, v0.y, 15 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 5.0 * scale, rotateVectorAround(v0.x, v0.y, 8 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 5.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 5.3 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 4.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 3.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 2.0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
-            pointsLeaf.push(v0);
-        }
-        g.strokeWeight(5);
-        g.stroke(mC);
-        g.fill(mC);
-        g.beginShape();
-        for (const vert of pointsLeaf) {
-            g.curveVertex(vert.x, vert.y);
-        }
-        g.endShape();
-    }
-}
-class CurveTulip extends Curve {
-    constructor(start, c, weight, leafWeight) {
-        super(start, c, weight);
-        this.leafWeight = leafWeight;
-        this.leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
-    }
-    draw() {
-        if (this.canDrawCurve()) {
-            this.drawLeaves();
-            this.drawCurve();
-            this.drawFlowerHead(this.position.x, this.position.y, random(1.9, 2.3));
-        }
-    }
-    drawLeaves() {
-        let sideChange = true;
-        for (var i = 0; i < this.vertices.length; i++) {
-            if (i % 8 == 0) {
-                let side = sideChange ? true : false;
-                sideChange = !sideChange;
-                this.drawLeaf(i, 8, side, random(0.8, 1.0));
+                this.drawLeaf(i, 8, side, this.leafSize);
             }
         }
     }
@@ -276,8 +155,8 @@ class CurveTulip extends Curve {
         points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.3 * scale, rotateVectorAround(v0.x, v0.y, 5 * sideFact, vr)));
         points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.2 * scale, rotateVectorAround(v0.x, v0.y, 1 * sideFact, vr)));
         points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.1 * scale, rotateVectorAround(v0.x, v0.y, 0 * sideFact, vr)));
-        g.strokeWeight(this.leafWeight);
-        g.stroke(c);
+        g.stroke(this.leafColor);
+        g.strokeWeight(8);
         g.fill(c);
         g.beginShape();
         for (const vert of points) {
@@ -317,8 +196,7 @@ class CurveTulip extends Curve {
             points.push(scaleVectorRelativeTo(v0.x, v0.y, 0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
             points.push(v0);
         }
-        g.strokeWeight(5);
-        g.stroke(c);
+        g.noStroke();
         g.fill(c);
         g.beginShape();
         for (const vert of points) {
@@ -343,9 +221,133 @@ class CurveTulip extends Curve {
             pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
             pointsLeaf.push(v0);
         }
-        g.strokeWeight(5);
-        g.stroke(mC);
+        g.noStroke();
         g.fill(mC);
+        g.beginShape();
+        for (const vert of pointsLeaf) {
+            g.curveVertex(vert.x, vert.y);
+        }
+        g.endShape();
+    }
+}
+class CurveTulip extends Curve {
+    constructor(startPosition, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent) {
+        super(startPosition, stemColor, stemWeight);
+        this.leafWeight = leafWeight;
+        this.headWeight = headWeight;
+        this.leafColor = leafColor;
+        this.leafSize = leafSize;
+        this.flowerHeadSize = flowerHeadSize;
+        this.leafSpacing = leafSpacing;
+        this.headColorMain = headColorMain;
+        this.headColorAccent = headColorAccent;
+        this.leafOffset = leafOffset;
+    }
+    draw() {
+        if (this.canDrawCurve()) {
+            this.drawLeaves();
+            this.drawCurve();
+            this.drawFlowerHead(this.position.x, this.position.y, this.flowerHeadSize);
+        }
+    }
+    drawLeaves() {
+        for (var i = this.leafOffset.x; i < this.vertices.length; i += this.leafSpacing.x) {
+            this.drawLeaf(i, 8, true, this.leafSize);
+        }
+        for (var i = this.leafOffset.y; i < this.vertices.length; i += this.leafSpacing.y) {
+            this.drawLeaf(i, 8, false, this.leafSize);
+        }
+    }
+    drawLeaf(index, lookahead, leafSide, scale) {
+        if (this.vertices.length <= index + lookahead)
+            return;
+        let c = this.leafColor;
+        let v0 = this.vertices[index];
+        let v1 = this.vertices[index + lookahead];
+        if (v0 == undefined || v1 == undefined) {
+            return;
+        }
+        let vr = v0.copy().add(v1).div(2);
+        let points = [];
+        let sideFact = leafSide ? 1 : -1;
+        points.push(v0);
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.01 * scale, rotateVectorAround(v0.x, v0.y, 60 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.1 * scale, rotateVectorAround(v0.x, v0.y, 60 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.4 * scale, rotateVectorAround(v0.x, v0.y, 60 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.6 * scale, rotateVectorAround(v0.x, v0.y, 50 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.0 * scale, rotateVectorAround(v0.x, v0.y, 40 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.85 * scale, rotateVectorAround(v0.x, v0.y, 23 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 2.0 * scale, rotateVectorAround(v0.x, v0.y, 20 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.5 * scale, rotateVectorAround(v0.x, v0.y, 22 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.0 * scale, rotateVectorAround(v0.x, v0.y, 17 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 10 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.3 * scale, rotateVectorAround(v0.x, v0.y, 5 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.2 * scale, rotateVectorAround(v0.x, v0.y, 1 * sideFact, vr)));
+        points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.1 * scale, rotateVectorAround(v0.x, v0.y, 0 * sideFact, vr)));
+        g.stroke(this.leafColor);
+        g.strokeWeight(8);
+        g.fill(c);
+        g.beginShape();
+        for (const vert of points) {
+            g.curveVertex(vert.x, vert.y);
+        }
+        g.endShape();
+    }
+    drawFlowerHead(x, y, scale) {
+        scale *= -1;
+        let vertLen = this.vertices.length;
+        if (vertLen < 3)
+            return;
+        let v0 = this.vertices[vertLen - 1];
+        let v1 = this.vertices[vertLen - 2];
+        let vr = v0.copy().add(v1).div(2);
+        let points = [];
+        for (var mirror = -1; mirror < 2; mirror += 2) {
+            points.push(v0);
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 1.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 2.5 * scale, rotateVectorAround(v0.x, v0.y, 60 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 3.0 * scale, rotateVectorAround(v0.x, v0.y, 50 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 3.3 * scale, rotateVectorAround(v0.x, v0.y, 40 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.0 * scale, rotateVectorAround(v0.x, v0.y, 30 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 5.0 * scale, rotateVectorAround(v0.x, v0.y, 30 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.5 * scale, rotateVectorAround(v0.x, v0.y, 20 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 4.2 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 3 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 2 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            points.push(scaleVectorRelativeTo(v0.x, v0.y, 0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            points.push(v0);
+        }
+        g.stroke(this.headColorMain);
+        g.strokeWeight(this.headWeight);
+        g.fill(this.headColorMain);
+        g.beginShape();
+        for (const vert of points) {
+            g.curveVertex(vert.x, vert.y);
+        }
+        g.endShape();
+        let pointsLeaf = [];
+        for (var mirror = -1; mirror < 2; mirror += 2) {
+            pointsLeaf.push(v0);
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 1.3 * scale, rotateVectorAround(v0.x, v0.y, 50 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 2.0 * scale, rotateVectorAround(v0.x, v0.y, 40 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 3.0 * scale, rotateVectorAround(v0.x, v0.y, 25 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 4.0 * scale, rotateVectorAround(v0.x, v0.y, 15 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 5.0 * scale, rotateVectorAround(v0.x, v0.y, 8 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 5.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 5.3 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 4.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 3.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 2.0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
+            pointsLeaf.push(v0);
+        }
+        g.noStroke();
+        g.fill(this.headColorAccent);
         g.beginShape();
         for (const vert of pointsLeaf) {
             g.curveVertex(vert.x, vert.y);
@@ -446,17 +448,36 @@ function setup() {
     spp = new StartingPointPicker();
 }
 function draw() {
-    if (curves.length < maxCurves) {
-        var start = spp.getStartingPoint();
-        if (start != null) {
-            let col = color(random(83, 130), random(50, 100), random(50, 80), 100);
-            var c = new CurveTulip(start, col, 10, 8);
-            curves.push(c);
-            c.computeVertecies();
-            c.draw();
-        }
+    if (curves.length >= maxCurves) {
+        noLoop();
+        return;
+    }
+    var start = spp.getStartingPoint();
+    if (start != null) {
+        var c = createTulip(start);
+        curves.push(c);
+        c.computeVertecies();
+        c.draw();
     }
     image(g, 0, 0, width, height);
+}
+function createTulip(pos) {
+    let col_hue = random() < 0.5 ? random(275, 359) : random(0, 49);
+    let col_sat = random(20, 100);
+    let col_bri = 100;
+    var leafSpacing = createVector(14, 14);
+    var leafOffset = createVector(3, 10);
+    var leafSize = randomGaussian(1.0, 0.2);
+    var flowerHeadSize = randomGaussian(2.1, 0.2);
+    var stemWeight = randomGaussian(10, 2);
+    var leafWeight = 8;
+    var headWeight = 3;
+    var stemColor = color(random(83, 130), random(50, 100), random(50, 80), 100);
+    var leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
+    var headColorMain = color(col_hue, col_sat, col_bri * 0.9, 100);
+    var headColorAccent = color(col_hue, col_sat, col_bri * 1.0, 100);
+    var c = new CurveTulip(pos, leafSpacing, leafOffset, leafSize, flowerHeadSize, stemWeight, leafWeight, headWeight, stemColor, leafColor, headColorMain, headColorAccent);
+    return c;
 }
 function keyPressed() {
     if (key == 's') {

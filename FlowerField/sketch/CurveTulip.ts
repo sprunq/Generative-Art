@@ -1,29 +1,54 @@
 class CurveTulip extends Curve {
-    leafWeight: number;
     leafColor: p5.Color;
+    leafSize: any;
+    flowerHeadSize: any;
+    leafWeight: number;
+    headWeight: number;
+    headColorMain: p5.Color;
+    headColorAccent: p5.Color;
+    leafSpacing: p5.Vector;
+    leafOffset: p5.Vector;
 
-    constructor(start: p5.Vector, c: p5.Color, weight: number, leafWeight: number) {
-        super(start, c, weight);
+    constructor(
+        startPosition: p5.Vector,
+        leafSpacing: p5.Vector,
+        leafOffset: p5.Vector,
+        leafSize: number,
+        flowerHeadSize: number,
+        stemWeight: number,
+        leafWeight: number,
+        headWeight: number,
+        stemColor: p5.Color,
+        leafColor: p5.Color,
+        headColorMain: p5.Color,
+        headColorAccent: p5.Color,
+    ) {
+        super(startPosition, stemColor, stemWeight);
         this.leafWeight = leafWeight;
-        this.leafColor = color(random(83, 130), random(50, 100), random(50, 100), 100);
+        this.headWeight = headWeight;
+        this.leafColor = leafColor;
+        this.leafSize = leafSize;
+        this.flowerHeadSize = flowerHeadSize;
+        this.leafSpacing = leafSpacing;
+        this.headColorMain = headColorMain
+        this.headColorAccent = headColorAccent
+        this.leafOffset = leafOffset;
     }
 
     public draw() {
         if (this.canDrawCurve()) {
             this.drawLeaves();
             this.drawCurve();
-            this.drawFlowerHead(this.position.x, this.position.y, random(1.9, 2.3));
+            this.drawFlowerHead(this.position.x, this.position.y, this.flowerHeadSize);
         }
     }
 
     private drawLeaves() {
-        let sideChange = true;
-        for (var i = 0; i < this.vertices.length; i++) {
-            if (i % 8 == 0) {
-                let side = sideChange ? true : false;
-                sideChange = !sideChange;
-                this.drawLeaf(i, 8, side, random(0.8, 1.0));
-            }
+        for (var i = this.leafOffset.x; i < this.vertices.length; i += this.leafSpacing.x) {
+            this.drawLeaf(i, 8, true, this.leafSize);
+        }
+        for (var i = this.leafOffset.y; i < this.vertices.length; i += this.leafSpacing.y) {
+            this.drawLeaf(i, 8, false, this.leafSize);
         }
     }
 
@@ -33,6 +58,7 @@ class CurveTulip extends Curve {
 
         let v0 = this.vertices[index];
         let v1 = this.vertices[index + lookahead];
+        if (v0 == undefined || v1 == undefined) { return; }
         let vr = v0.copy().add(v1).div(2);
 
         let points: p5.Vector[] = [];
@@ -52,8 +78,8 @@ class CurveTulip extends Curve {
         points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.2 * scale, rotateVectorAround(v0.x, v0.y, 1 * sideFact, vr)))
         points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.1 * scale, rotateVectorAround(v0.x, v0.y, 0 * sideFact, vr)))
 
-        g.strokeWeight(this.leafWeight);
-        g.stroke(c);
+        g.stroke(this.leafColor);
+        g.strokeWeight(8);
         g.fill(c);
         g.beginShape();
         for (const vert of points) {
@@ -63,13 +89,6 @@ class CurveTulip extends Curve {
     }
 
     private drawFlowerHead(x: number, y: number, scale: number) {
-        let col_hue = random() < 0.5 ? random(275, 359) : random(0, 49);
-        let col_sat = random(20, 100);
-        let col_bri = 100;
-        let c = color(col_hue, col_sat, col_bri * 0.9, 100);
-        let mC = color(col_hue, col_sat, col_bri * 1.0, 100);
-
-
         scale *= -1;
         let vertLen = this.vertices.length;
         if (vertLen < 3) return;
@@ -78,7 +97,7 @@ class CurveTulip extends Curve {
         let vr = v0.copy().add(v1).div(2);
 
         let points: p5.Vector[] = [];
-        // Only contains the points for one half of the floewr head
+        // Only contains the points for one half of the flower head
         for (var mirror = -1; mirror < 2; mirror += 2) {
             points.push(v0);
             points.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
@@ -97,9 +116,9 @@ class CurveTulip extends Curve {
             points.push(scaleVectorRelativeTo(v0.x, v0.y, 0 * scale, rotateVectorAround(v0.x, v0.y, 0 * mirror, vr)));
             points.push(v0);
         }
-        g.strokeWeight(5);
-        g.stroke(c);
-        g.fill(c);
+        g.stroke(this.headColorMain);
+        g.strokeWeight(this.headWeight);
+        g.fill(this.headColorMain);
         g.beginShape();
         for (const vert of points) {
             g.curveVertex(vert.x, vert.y);
@@ -107,7 +126,7 @@ class CurveTulip extends Curve {
         g.endShape();
 
         let pointsLeaf: p5.Vector[] = [];
-        // Only contains the points for one half of the floewr head
+        // Only contains the points for one half of the flower head
         for (var mirror = -1; mirror < 2; mirror += 2) {
             pointsLeaf.push(v0);
             pointsLeaf.push(scaleVectorRelativeTo(v0.x, v0.y, 0.5 * scale, rotateVectorAround(v0.x, v0.y, 80 * mirror, vr)));
@@ -126,9 +145,8 @@ class CurveTulip extends Curve {
             pointsLeaf.push(v0);
         }
 
-        g.strokeWeight(5);
-        g.stroke(mC);
-        g.fill(mC);
+        g.noStroke();
+        g.fill(this.headColorAccent);
         g.beginShape();
         for (const vert of pointsLeaf) {
             g.curveVertex(vert.x, vert.y);
