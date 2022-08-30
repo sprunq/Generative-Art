@@ -1,10 +1,13 @@
 # Generative Art
  A collection of my art. Mostly produced with [p5js](https://p5js.org/) and [nannou](https://nannou.cc/).
 
+## [Flower Field](/FlowerField/)
+<p align="left">
+<img src="/Physarum/images/physarum.webp" width="512px"/>
+</p>
 
 ## [Flower Field](/FlowerField/)
 <img src="/FlowerField/pictures/full_mid_compressed.png" width="800px"/>
-
 
 ## [Cosmic Oddity](/CosmicOddity/)
 <img src="/CosmicOddity/pictures/cosmic_oddity_3_min.png" width="800px"/>
