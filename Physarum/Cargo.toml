@@ -1,0 +1,15 @@
+[package]
+name = "nannou_template"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.19"
+itertools = "0.10.3"
+nannou = "0.18.1"
+nannou_egui = "0.5.0"
+rand = "0.8.5"
+rand_distr = "0.4.3"
+rayon = "1.5.3"
