@@ -1,5 +1,5 @@
 use super::util;
-use rand::Rng;
+use rand::{rngs::SmallRng, Rng};
 use std::f32::consts::TAU;
 
 pub struct Particle {
@@ -10,7 +10,7 @@ pub struct Particle {
 }
 
 impl Particle {
-    pub fn new<R: Rng + ?Sized>(width: usize, height: usize, id: usize, rng: &mut R) -> Self {
+    pub fn new(width: usize, height: usize, id: usize, rng: &mut SmallRng) -> Self {
         let (x, y, angle) = rng.gen::<(f32, f32, f32)>();
         Particle {
             x: x * width as f32,
