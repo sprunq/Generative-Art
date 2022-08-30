@@ -1,7 +1,7 @@
 # Generative Art
  A collection of my art. Mostly produced with [p5js](https://p5js.org/) and [nannou](https://nannou.cc/).
 
-## [Flower Field](/FlowerField/)
+## [Physarum](/Physarum/)
 <p align="left">
 <img src="/Physarum/images/physarum.webp" width="512px"/>
 </p>
