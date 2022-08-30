@@ -1,8 +1,8 @@
-use super::agent::Agent;
 use super::grid;
 use super::grid::Grid;
 use super::palette;
 use super::palette::Palette;
+use super::particle::Particle;
 use super::population_config::PopulationConfig;
 use itertools::multizip;
 use nannou::image::{DynamicImage, GenericImage, Rgba};
@@ -11,7 +11,7 @@ use rand_distr::{Distribution, Normal};
 use rayon::prelude::{IntoParallelRefMutIterator, ParallelIterator};
 
 pub struct PhysarumModel {
-    agents: Vec<Agent>,
+    agents: Vec<Particle>,
     grids: Vec<Grid>,
     attraction_table: Vec<Vec<f32>>,
     diffusity: usize,
@@ -56,7 +56,7 @@ impl PhysarumModel {
 
         PhysarumModel {
             agents: (0..n_particles)
-                .map(|i| Agent::new(width, height, i / particles_per_grid, rng))
+                .map(|i| Particle::new(width, height, i / particles_per_grid, rng))
                 .collect(),
             grids: (0..n_populations)
                 .map(|_| Grid::new(width, height, rng))
@@ -64,7 +64,7 @@ impl PhysarumModel {
             attraction_table,
             diffusity,
             iteration: 0,
-            palette: palette::PALETTES[palette_index],
+            palette: palette::PALETTE_ARRAY[palette_index],
         }
     }
 
@@ -82,62 +82,46 @@ impl PhysarumModel {
         }
     }
 
-    /// Perform a single simulation step.
     pub fn step(&mut self) {
-        // Combine grids
         let grids = &mut self.grids;
         grid::combine(grids, &self.attraction_table);
 
         self.agents.par_iter_mut().for_each(|agent| {
-            {
-                let grid = &grids[agent.id];
-                let PopulationConfig {
-                    sensor_distance,
-                    sensor_angle,
-                    rotation_angle,
-                    step_distance,
-                    ..
-                } = grid.config;
-                let (width, height) = (grid.width, grid.height);
+            let grid = &grids[agent.id];
+            let PopulationConfig {
+                sensor_distance,
+                sensor_angle,
+                rotation_angle,
+                step_distance,
+                ..
+            } = grid.config;
+            let (width, height) = (grid.width, grid.height);
 
-                let xc = agent.x + agent.angle.cos() * sensor_distance;
-                let yc = agent.y + agent.angle.sin() * sensor_distance;
-                let xl = agent.x + (agent.angle - sensor_angle).cos() * sensor_distance;
-                let yl = agent.y + (agent.angle - sensor_angle).sin() * sensor_distance;
-                let xr = agent.x + (agent.angle + sensor_angle).cos() * sensor_distance;
-                let yr = agent.y + (agent.angle + sensor_angle).sin() * sensor_distance;
+            let xc = agent.x + agent.angle.cos() * sensor_distance;
+            let yc = agent.y + agent.angle.sin() * sensor_distance;
+            let xl = agent.x + (agent.angle - sensor_angle).cos() * sensor_distance;
+            let yl = agent.y + (agent.angle - sensor_angle).sin() * sensor_distance;
+            let xr = agent.x + (agent.angle + sensor_angle).cos() * sensor_distance;
+            let yr = agent.y + (agent.angle + sensor_angle).sin() * sensor_distance;
 
-                // Sense. We sense from the buffer because this is where we previously combined data
-                // from all the grid.
-                let trail_c = grid.get_buf(xc, yc);
-                let trail_l = grid.get_buf(xl, yl);
-                let trail_r = grid.get_buf(xr, yr);
+            let trail_c = grid.get_buf(xc, yc);
+            let trail_l = grid.get_buf(xl, yl);
+            let trail_r = grid.get_buf(xr, yr);
 
-                let mut rng = SmallRng::seed_from_u64(agent.id as u64);
-                // Rotate and move
-                let direction = PhysarumModel::pick_direction(trail_c, trail_l, trail_r, &mut rng);
-                agent.rotate_and_move(direction, rotation_angle, step_distance, width, height);
-            }
+            let mut rng = SmallRng::seed_from_u64(agent.id as u64);
+            let direction = PhysarumModel::pick_direction(trail_c, trail_l, trail_r, &mut rng);
+            agent.rotate_and_move(direction, rotation_angle, step_distance, width, height);
         });
 
-        // Deposit
         for agent in self.agents.iter() {
             self.grids[agent.id].deposit(agent.x, agent.y);
         }
 
-        // Diffuse + Decay
         let diffusivity = self.diffusity;
         self.grids.iter_mut().for_each(|grid| {
             grid.diffuse(diffusivity);
         });
         self.iteration += 1;
-    }
-
-    pub fn print_configurations(&self) {
-        for (i, grid) in self.grids.iter().enumerate() {
-            println!("Grid {}: {}", i, grid.config);
-        }
-        println!("Attraction table: {:#?}", self.attraction_table);
     }
 
     pub fn save_to_image(&self, image: &mut DynamicImage) {

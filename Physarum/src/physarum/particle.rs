@@ -2,17 +2,17 @@ use super::util;
 use rand::Rng;
 use std::f32::consts::TAU;
 
-pub struct Agent {
+pub struct Particle {
     pub x: f32,
     pub y: f32,
     pub angle: f32,
     pub id: usize,
 }
 
-impl Agent {
+impl Particle {
     pub fn new<R: Rng + ?Sized>(width: usize, height: usize, id: usize, rng: &mut R) -> Self {
         let (x, y, angle) = rng.gen::<(f32, f32, f32)>();
-        Agent {
+        Particle {
             x: x * width as f32,
             y: y * height as f32,
             angle: angle * TAU,

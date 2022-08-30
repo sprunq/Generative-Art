@@ -196,7 +196,7 @@ fn update_gui(model: &mut Model, update: Update) {
             )
             .changed();
 
-        let palettes_len = physarum::palette::PALETTES.len() - 1;
+        let palettes_len = physarum::palette::PALETTE_ARRAY.len() - 1;
         model.changed |= ui
             .add(
                 egui::Slider::new(&mut model.physarum_settings.palette_idx, 0..=palettes_len)
@@ -223,8 +223,6 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
         save_frame(app);
     } else if key == Key::F {
         model.egui_visible = !model.egui_visible;
-    } else if key == Key::D {
-        model.physarum_settings.model.print_configurations();
     }
 }
 

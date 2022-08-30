@@ -1,7 +1,5 @@
-use rand::Rng;
-use std::fmt::{Display, Formatter};
+use rand::{rngs::SmallRng, Rng};
 
-#[derive(Debug)]
 pub struct PopulationConfig {
     pub sensor_distance: f32,
     pub step_distance: f32,
@@ -10,21 +8,6 @@ pub struct PopulationConfig {
 
     pub decay_factor: f32,
     pub deposition_amount: f32,
-}
-
-impl Display for PopulationConfig {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{{\n  Sensor Distance: {},\n  Step Distance: {},\n  Sensor Angle: {},\n  Rotation Angle: {},\n  Decay Factor: {},\n  Deposition Amount: {},\n}}",
-            self.sensor_distance,
-            self.step_distance,
-            self.sensor_angle,
-            self.rotation_angle,
-            self.decay_factor,
-            self.deposition_amount
-        )
-    }
 }
 
 impl PopulationConfig {
@@ -41,8 +24,7 @@ impl PopulationConfig {
     const DECAY_FACTOR_MIN: f32 = 0.1;
     const DECAY_FACTOR_MAX: f32 = 0.1;
 
-    /// Construct a random configuration.
-    pub fn new<R: Rng + ?Sized>(rng: &mut R) -> Self {
+    pub fn new(rng: &mut SmallRng) -> Self {
         PopulationConfig {
             sensor_distance: rng.gen_range(Self::SENSOR_DISTANCE_MIN..=Self::SENSOR_DISTANCE_MAX),
             step_distance: rng.gen_range(Self::STEP_DISTANCE_MIN..=Self::STEP_DISTANCE_MAX),

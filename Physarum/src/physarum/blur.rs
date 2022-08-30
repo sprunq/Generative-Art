@@ -1,7 +1,6 @@
 use itertools::multizip;
 use rayon::prelude::*;
 
-#[derive(Debug)]
 pub struct Blur {
     row_buffer: Vec<f32>,
 }
@@ -13,8 +12,6 @@ impl Blur {
         }
     }
 
-    /// Blur an image with 2 box filter passes. The result will be written to the src slice, while
-    /// the buf slice is used as a scratch space.
     pub fn run(
         &mut self,
         src: &mut [f32],
@@ -29,9 +26,6 @@ impl Blur {
         self.box_blur(src, buf, width, height, boxes[1], decay);
     }
 
-    /// Approximate 1D Gaussian filter of standard deviation sigma with N box filter passes. Each
-    /// element in the output array contains the radius of the box filter for the corresponding
-    /// pass.
     fn boxes_for_gaussian<const N: usize>(sigma: f32) -> ([usize; N]) {
         let w_ideal = (12.0 * sigma * sigma / N as f32 + 1.0).sqrt();
         let mut w = w_ideal as usize;
@@ -47,8 +41,6 @@ impl Blur {
         result
     }
 
-    /// Perform one pass of the 2D box filter of the given radius. The result will be written to the
-    /// src slice, while the buf slice is used as a scratch space.
     fn box_blur(
         &mut self,
         src: &mut [f32],
@@ -62,15 +54,12 @@ impl Blur {
         self.box_blur_v(buf, src, width, height, radius, decay);
     }
 
-    /// Perform one pass of the 1D box filter of the given radius along x axis.
     fn box_blur_h(&mut self, src: &[f32], dst: &mut [f32], width: usize, radius: usize) {
         let weight = 1.0 / (2 * radius + 1) as f32;
 
         src.par_chunks_exact(width)
             .zip(dst.par_chunks_exact_mut(width))
             .for_each(|(src_row, dst_row)| {
-                // First we build a value for the beginning of each row. We assume periodic boundary
-                // conditions, so we need to push the left index to the opposite side of the row.
                 let mut value = src_row[width - radius - 1];
                 for j in 0..radius {
                     value += src_row[width - radius + j] + src_row[j];
@@ -85,8 +74,6 @@ impl Blur {
             })
     }
 
-    /// Perform one pass of the 1D box filter of the given radius along y axis. Applies the decay
-    /// factor to the destination buffer.
     fn box_blur_v(
         &mut self,
         src: &[f32],
@@ -97,10 +84,6 @@ impl Blur {
         decay: f32,
     ) {
         let weight = decay / (2 * radius + 1) as f32;
-
-        // We don't replicate the horizontal filter logic because of the cache-unfriendly memory
-        // access patterns of sequential iteration over individual columns. Instead, we iterate over
-        // rows via loop interchange.
         let offset = (height - radius - 1) * width;
         self.row_buffer
             .copy_from_slice(&src[offset..offset + width]);
@@ -116,7 +99,6 @@ impl Blur {
             }
         }
 
-        // The outer loop cannot be parallelized because we need to use the buffer sequentially.
         for (i, dst_row) in dst.chunks_exact_mut(width).enumerate() {
             let bottom_off = ((i + height - radius - 1) & (height - 1)) * width;
             let bottom_row = &src[bottom_off..bottom_off + width];

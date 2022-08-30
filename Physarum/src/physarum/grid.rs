@@ -3,27 +3,21 @@ use super::population_config::PopulationConfig;
 use rand::Rng;
 
 use rand::distributions::Uniform;
+use rand::rngs::SmallRng;
 
-/// A 2D grid with a scalar value per each grid block. Each grid is occupied by a single population,
-/// hence we store the population config inside the grid.
-#[derive(Debug)]
 pub struct Grid {
     pub config: PopulationConfig,
     pub width: usize,
     pub height: usize,
-
     data: Vec<f32>,
-
-    // Scratch space for the blur operation.
     buf: Vec<f32>,
     blur: Blur,
 }
 
 impl Grid {
-    /// Create a new grid filled with random floats in the [0.0..1.0) range.
-    pub fn new<R: Rng + ?Sized>(width: usize, height: usize, rng: &mut R) -> Self {
+    pub fn new(width: usize, height: usize, rng: &mut SmallRng) -> Self {
         if !width.is_power_of_two() || !height.is_power_of_two() {
-            panic!("Grid dimensions must be a power of two.");
+            panic!("Grid dims must be 2^n");
         }
         let range = Uniform::from(0.0..1.0);
         let data = rng.sample_iter(range).take(width * height).collect();
@@ -38,27 +32,21 @@ impl Grid {
         }
     }
 
-    /// Truncate x and y and return a corresponding index into the data slice.
     fn index(&self, x: f32, y: f32) -> usize {
-        // x/y can come in negative, hence we shift them by width/height.
         let i = (x + self.width as f32) as usize & (self.width - 1);
         let j = (y + self.height as f32) as usize & (self.height - 1);
         j * self.width + i
     }
 
-    /// Get the buffer value at a given position. The implementation effectively treats data as
-    /// periodic, hence any finite position will produce a value.
     pub fn get_buf(&self, x: f32, y: f32) -> f32 {
         self.buf[self.index(x, y)]
     }
 
-    /// Add a value to the grid data at a given position.
     pub fn deposit(&mut self, x: f32, y: f32) {
         let idx = self.index(x, y);
         self.data[idx] += self.config.deposition_amount;
     }
 
-    /// Diffuse grid data and apply a decay multiplier.
     pub fn diffuse(&mut self, radius: usize) {
         self.blur.run(
             &mut self.data,
@@ -94,9 +82,6 @@ where
 {
     let datas: Vec<_> = grids.iter().map(|grid| &grid.data).collect();
     let bufs: Vec<_> = grids.iter().map(|grid| &grid.buf).collect();
-
-    // We mutate grid buffers and read grid data. We use unsafe because we need shared/unique
-    // borrows on different fields of the same Grid struct.
     bufs.iter().enumerate().for_each(|(i, buf)| unsafe {
         let buf_ptr = *buf as *const Vec<f32> as *mut Vec<f32>;
         buf_ptr.as_mut().unwrap().fill(0.0);
