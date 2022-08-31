@@ -1,5 +1,6 @@
 use rand::{rngs::SmallRng, Rng};
 
+#[derive(Clone, Copy)]
 pub struct PopulationConfig {
     pub sensor_distance: f32,
     pub step_distance: f32,

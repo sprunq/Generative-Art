@@ -11,8 +11,8 @@ use rand_distr::{Distribution, Normal};
 use rayon::prelude::{IntoParallelRefMutIterator, ParallelIterator};
 
 pub struct PhysarumModel {
+    pub grids: Vec<Grid>,
     agents: Vec<Particle>,
-    grids: Vec<Grid>,
     attraction_table: Vec<Vec<f32>>,
     diffusity: usize,
     iteration: i32,
@@ -59,13 +59,23 @@ impl PhysarumModel {
                 .map(|i| Particle::new(width, height, i / particles_per_grid, rng))
                 .collect(),
             grids: (0..n_populations)
-                .map(|_| Grid::new(width, height, rng))
+                .map(|_| Grid::new(width, height, PopulationConfig::new(rng), rng))
                 .collect(),
             attraction_table,
             diffusity,
             iteration: 0,
             palette: palette::PALETTE_ARRAY[palette_index],
         }
+    }
+
+    pub fn set_population_configs(&mut self, configs: Vec<PopulationConfig>) {
+        if configs.len() < self.grids.len() {
+            panic!("Expected same lenght vecs for grid and config")
+        }
+
+        self.grids.iter_mut().enumerate().for_each(|(i, grid)| {
+            grid.config = configs[i];
+        })
     }
 
     fn pick_direction(center: f32, left: f32, right: f32, rng: &mut SmallRng) -> f32 {
@@ -124,6 +134,13 @@ impl PhysarumModel {
         self.iteration += 1;
     }
 
+    pub fn print_configurations(&self) {
+        for (i, grid) in self.grids.iter().enumerate() {
+            println!("Grid {}: {}", i, grid.config);
+        }
+        println!("Attraction table: {:#?}", self.attraction_table);
+    }
+
     pub fn save_to_image(&self, image: &mut DynamicImage) {
         let (width, height) = (self.grids[0].width, self.grids[0].height);
         let max_values: Vec<_> = self
@@ -132,15 +149,15 @@ impl PhysarumModel {
             .map(|grid| grid.quantile(0.999) * 1.5)
             .collect();
 
-        for y in 0..height {
-            for x in 0..width {
+        (0..height).for_each(|y| {
+            (0..width).for_each(|x| {
                 let i = y * width + x;
                 let (mut r, mut g, mut b) = (0.0_f32, 0.0_f32, 0.0_f32);
                 for (grid, max_value, color) in
                     multizip((&self.grids, &max_values, &self.palette.colors))
                 {
                     let mut t = (grid.data()[i] / max_value).clamp(0.0, 1.0);
-                    t = t.powf(1.0 / 2.2); // gamma correction
+                    t = t.powf(1.0 / 2.2);
                     r += color.0[0] as f32 * t;
                     g += color.0[1] as f32 * t;
                     b += color.0[2] as f32 * t;
@@ -149,7 +166,7 @@ impl PhysarumModel {
                 g = g.clamp(0.0, 255.0);
                 b = b.clamp(0.0, 255.0);
                 image.put_pixel(x as u32, y as u32, Rgba([r as u8, g as u8, b as u8, 255]));
-            }
-        }
+            });
+        });
     }
 }

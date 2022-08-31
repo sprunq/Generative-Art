@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use super::blur::Blur;
 use super::population_config::PopulationConfig;
 use rand::Rng;
@@ -15,7 +17,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(width: usize, height: usize, rng: &mut SmallRng) -> Self {
+    pub fn new(width: usize, height: usize, config: PopulationConfig, rng: &mut SmallRng) -> Self {
         if !width.is_power_of_two() || !height.is_power_of_two() {
             panic!("Grid dims must be 2^n");
         }
@@ -26,7 +28,7 @@ impl Grid {
             width,
             height,
             data,
-            config: PopulationConfig::new(rng),
+            config,
             buf: vec![0.0; width * height],
             blur: Blur::new(width),
         }
@@ -65,14 +67,29 @@ impl Grid {
             (self.data.len() as f32 * fraction) as usize
         };
         let mut sorted = self.data.clone();
-        sorted
-            .as_mut_slice()
-            .select_nth_unstable_by(index, |a, b| a.partial_cmp(b).unwrap());
+        sorted.as_mut_slice().select_nth_unstable_by(index, |a, b| {
+            a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+        });
         sorted[index]
     }
 
     pub fn data(&self) -> &[f32] {
         &self.data
+    }
+}
+
+impl Display for PopulationConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{{\n  Sensor Distance: {},\n  Step Distance: {},\n  Sensor Angle: {},\n  Rotation Angle: {},\n  Decay Factor: {},\n  Deposition Amount: {},\n}}",
+            self.sensor_distance,
+            self.step_distance,
+            self.sensor_angle,
+            self.rotation_angle,
+            self.decay_factor,
+            self.deposition_amount
+        )
     }
 }
 

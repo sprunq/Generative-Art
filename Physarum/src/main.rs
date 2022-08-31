@@ -1,10 +1,12 @@
 #![allow(dead_code)]
 pub mod physarum;
+pub mod ui;
 
 use chrono::{Datelike, Timelike};
 use nannou::{image::DynamicImage, prelude::*, wgpu::Texture};
-use nannou_egui::{self, egui, Egui};
+use nannou_egui::{self, Egui};
 use physarum::physarum_model::PhysarumModel;
+use physarum::population_config::PopulationConfig;
 use rand::prelude::*;
 
 // None for random seed every run
@@ -16,6 +18,8 @@ fn main() {
 
 struct PhysarumSettings {
     model: PhysarumModel,
+    configs: Vec<PopulationConfig>,
+    config_changed: bool,
     width: usize,
     height: usize,
     n_particles: usize,
@@ -24,10 +28,11 @@ struct PhysarumSettings {
     palette_idx: usize,
 }
 
-struct Model {
+pub struct Model {
     physarum_settings: PhysarumSettings,
     seed: u64,
     egui_visible: bool,
+    steps_per_frame: usize,
     egui: Egui,
     main_window_id: WindowId,
     rng: SmallRng,
@@ -55,6 +60,7 @@ impl Model {
             changed: true,
             render: false,
             image,
+            steps_per_frame: 1,
         }
     }
 
@@ -64,16 +70,20 @@ impl Model {
 
     fn reset(&mut self) {
         self.reset_rng();
+        let sc = &self.physarum_settings;
         let physarum_model = PhysarumModel::new(
-            self.physarum_settings.width,
-            self.physarum_settings.height,
-            self.physarum_settings.n_particles,
-            self.physarum_settings.n_populations,
-            self.physarum_settings.diffusivity,
-            self.physarum_settings.palette_idx,
+            sc.width,
+            sc.height,
+            sc.n_particles,
+            sc.n_populations,
+            sc.diffusivity,
+            sc.palette_idx,
             &mut self.rng,
         );
         self.physarum_settings.model = physarum_model;
+        self.physarum_settings
+            .model
+            .set_population_configs(self.physarum_settings.configs.clone());
     }
 }
 
@@ -95,10 +105,11 @@ fn model(app: &App) -> Model {
 
     // Physarum
     let (width, height) = (window.rect().w() as usize, window.rect().h() as usize);
-    let n_particles = 2000000;
-    let n_populations = 4;
+    let n_particles = 200000;
+    let n_populations = 2;
     let diffusivity = 1;
     let palette_idx = 0;
+    let configs = vec![PopulationConfig::new(&mut rng); 5];
     let physarum_model = PhysarumModel::new(
         width,
         height,
@@ -117,6 +128,8 @@ fn model(app: &App) -> Model {
         diffusivity,
         model: physarum_model,
         palette_idx,
+        configs,
+        config_changed: true,
     };
 
     Model::new(
@@ -132,9 +145,9 @@ fn model(app: &App) -> Model {
 fn update(_app: &App, model: &mut Model, update: Update) {
     model.changed = false;
     if model.egui_visible {
-        update_gui(model, update);
+        ui::update_gui(model, update);
     }
-    for _ in 0..1 {
+    for _ in 0..model.steps_per_frame {
         model.physarum_settings.model.step();
     }
     model
@@ -145,6 +158,7 @@ fn update(_app: &App, model: &mut Model, update: Update) {
 
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
+    draw.background().color(BLACK);
     let texture = Texture::from_image(app, &model.image);
     draw.texture(&texture);
 
@@ -153,64 +167,9 @@ fn view(app: &App, model: &Model, frame: Frame) {
         model.egui.draw_to_frame(&frame).unwrap();
     }
     if model.render {
-        save_frame(app);
-    }
-}
-
-fn update_gui(model: &mut Model, update: Update) {
-    model.egui.set_elapsed_time(update.since_start);
-    let ctx = model.egui.begin_frame();
-    egui::Window::new("Settings").show(&ctx, |ui| {
-        ui.add(egui::Label::new("General"));
-        model.changed |= ui
-            .add(
-                egui::Slider::new(&mut model.seed, 0..=u64::MAX - 1)
-                    .text("Seed")
-                    .smart_aim(false),
-            )
-            .changed();
-
-        ui.add(egui::Separator::default());
-        ui.add(egui::Label::new("Physarum"));
-        model.changed |= ui
-            .add(
-                egui::Slider::new(&mut model.physarum_settings.n_particles, 0..=6_000_000)
-                    .text("Particles")
-                    .smart_aim(false),
-            )
-            .changed();
-
-        model.changed |= ui
-            .add(
-                egui::Slider::new(&mut model.physarum_settings.n_populations, 1..=5)
-                    .text("Populations")
-                    .smart_aim(false),
-            )
-            .changed();
-
-        model.changed |= ui
-            .add(
-                egui::Slider::new(&mut model.physarum_settings.diffusivity, 1..=5)
-                    .text("Diffusivity")
-                    .smart_aim(false),
-            )
-            .changed();
-
-        let palettes_len = physarum::palette::PALETTE_ARRAY.len() - 1;
-        model.changed |= ui
-            .add(
-                egui::Slider::new(&mut model.physarum_settings.palette_idx, 0..=palettes_len)
-                    .text("Palette")
-                    .smart_aim(false),
-            )
-            .changed();
-
-        model.changed |= ui.button("Redraw").clicked();
-        ui.checkbox(&mut model.render, "Render");
-    });
-    drop(ctx);
-    if model.changed {
-        model.reset();
+        let _ = &model
+            .image
+            .save_with_format(get_path(app), nannou::image::ImageFormat::Png);
     }
 }
 
@@ -223,6 +182,8 @@ fn key_pressed(app: &App, model: &mut Model, key: Key) {
         save_frame(app);
     } else if key == Key::F {
         model.egui_visible = !model.egui_visible;
+    } else if key == Key::D {
+        model.physarum_settings.model.print_configurations();
     }
 }
 
@@ -231,6 +192,11 @@ fn mouse_pressed(_app: &App, _model: &mut Model, button: MouseButton) {
 }
 
 fn save_frame(app: &App) {
+    let path = get_path(app);
+    app.main_window().capture_frame(path);
+}
+
+fn get_path(app: &App) -> String {
     let now = chrono::offset::Local::now();
     let time = format!(
         "{}_{}_{}_{}_{}_{}",
@@ -248,5 +214,5 @@ fn save_frame(app: &App) {
         time,
         ".png"
     );
-    app.main_window().capture_frame(path);
+    path
 }
