@@ -1,6 +1,7 @@
 use rand::{rngs::SmallRng, Rng};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
 pub struct PopulationConfig {
     pub sensor_distance: f32,
     pub step_distance: f32,

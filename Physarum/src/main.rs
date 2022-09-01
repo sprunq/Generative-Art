@@ -3,14 +3,12 @@ pub mod physarum;
 pub mod ui;
 
 use chrono::{Datelike, Timelike};
+use fps_ticker::Fps;
 use nannou::{image::DynamicImage, prelude::*, wgpu::Texture};
 use nannou_egui::{self, Egui};
 use physarum::physarum_model::PhysarumModel;
 use physarum::population_config::PopulationConfig;
 use rand::prelude::*;
-
-// None for random seed every run
-const SEED: Option<u64> = None;
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -30,6 +28,7 @@ struct PhysarumSettings {
 
 pub struct Model {
     physarum_settings: PhysarumSettings,
+    fps_counter: Fps,
     seed: u64,
     egui_visible: bool,
     steps_per_frame: usize,
@@ -47,20 +46,21 @@ impl Model {
         seed: u64,
         rng: SmallRng,
         egui: Egui,
-        image_window: WindowId,
+        main_window_id: WindowId,
         image: DynamicImage,
     ) -> Self {
         Model {
             physarum_settings,
-            seed,
-            egui_visible: false,
-            egui,
-            main_window_id: image_window,
-            rng,
+            fps_counter: Fps::with_window_len(60),
+            steps_per_frame: 1,
+            egui_visible: true,
             changed: true,
             render: false,
+            main_window_id,
+            seed,
+            egui,
+            rng,
             image,
-            steps_per_frame: 1,
         }
     }
 
@@ -87,10 +87,23 @@ impl Model {
     }
 }
 
+pub fn get_random_configs(rng: &mut SmallRng) -> Vec<PopulationConfig> {
+    let mut configs = vec![];
+    (0..5).for_each(|_| {
+        configs.push(PopulationConfig::new(rng));
+    });
+    configs
+}
+
 fn model(app: &App) -> Model {
+    let seed_set: Option<u64> = Some(0);
+    let config_set: Option<String> = Some(
+        r#"[{"sensor_distance":49.44998,"step_distance":1.4334296,"sensor_angle":1.4103054,"rotation_angle":1.3992796,"decay_factor":0.1,"deposition_amount":5.0},{"sensor_distance":16.194483,"step_distance":1.0892088,"sensor_angle":0.6044981,"rotation_angle":1.3636005,"decay_factor":0.1,"deposition_amount":5.0},{"sensor_distance":49.455574,"step_distance":0.92719734,"sensor_angle":2.0906055,"rotation_angle":0.57098943,"decay_factor":0.1,"deposition_amount":5.0},{"sensor_distance":25.101528,"step_distance":1.8175551,"sensor_angle":1.9417597,"rotation_angle":0.30816564,"decay_factor":0.1,"deposition_amount":5.0},{"sensor_distance":51.51055,"step_distance":1.4250815,"sensor_angle":0.14544931,"rotation_angle":1.485748,"decay_factor":0.1,"deposition_amount":5.0}]"#.to_string(),
+    );
+
     let image_window = app
         .new_window()
-        .size(512, 512)
+        .size(1400, 1024)
         .view(view)
         .key_pressed(key_pressed)
         .mouse_pressed(mouse_pressed)
@@ -98,18 +111,24 @@ fn model(app: &App) -> Model {
         .title("Physarum")
         .build()
         .unwrap();
+
     let window = app.window(image_window).unwrap();
-    let seed = SEED.unwrap_or(thread_rng().next_u64());
+    let seed = seed_set.unwrap_or(thread_rng().next_u64());
     let mut rng = SmallRng::seed_from_u64(seed);
     println!("{}", seed);
 
     // Physarum
-    let (width, height) = (window.rect().w() as usize, window.rect().h() as usize);
+    let (width, height) = (1024, 1024);
     let n_particles = 200000;
     let n_populations = 2;
     let diffusivity = 1;
     let palette_idx = 0;
-    let configs = vec![PopulationConfig::new(&mut rng); 5];
+    let configs: Vec<PopulationConfig> = {
+        match config_set {
+            Some(val) => serde_json::from_str(&val).unwrap_or(get_random_configs(&mut rng)),
+            None => get_random_configs(&mut rng),
+        }
+    };
     let physarum_model = PhysarumModel::new(
         width,
         height,
@@ -143,6 +162,7 @@ fn model(app: &App) -> Model {
 }
 
 fn update(_app: &App, model: &mut Model, update: Update) {
+    model.fps_counter.tick();
     model.changed = false;
     if model.egui_visible {
         ui::update_gui(model, update);
@@ -160,8 +180,10 @@ fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw();
     draw.background().color(BLACK);
     let texture = Texture::from_image(app, &model.image);
-    draw.texture(&texture);
-
+    let tx_w = texture.size()[1] as f32 * 0.5;
+    let right = app.window_rect().right();
+    let offset = right - tx_w;
+    draw.texture(&texture).x(offset);
     draw.to_frame(app, &frame).unwrap();
     if model.egui_visible {
         model.egui.draw_to_frame(&frame).unwrap();
