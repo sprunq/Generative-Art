@@ -1,13 +1,7 @@
-use std::fs;
-
+use crate::{physarum, Model};
 use nannou::prelude::*;
 use nannou_egui::{self, egui};
 use rand::{rngs::SmallRng, thread_rng, RngCore, SeedableRng};
-
-use crate::{
-    physarum::{self, population_config::PopulationConfig},
-    Model,
-};
 
 pub fn update_gui(model: &mut Model, update: Update) {
     model.egui.set_elapsed_time(update.since_start);
